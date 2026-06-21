@@ -2,7 +2,7 @@ import {createBrowserRouter} from 'react-router-dom';
 
 const router = createBrowserRouter([
   {
-    path: '/',
+    index: true,
     async lazy() {
       const {default: Home} = await import('../pages/Home');
       return {Component: Home};

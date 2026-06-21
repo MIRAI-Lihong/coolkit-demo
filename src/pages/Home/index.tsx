@@ -1,5 +1,6 @@
 import {Button, Result} from 'antd';
 import {useNavigate} from 'react-router-dom';
+import styles from './index.module.less';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -8,7 +9,7 @@ export default function Home() {
   const jumpLogin = () => navigate('/login');
 
   return (
-    <div style={{padding: '50px'}}>
+    <div className={styles.container}>
       <Result
         status='success'
         title='欢迎来到首页!'

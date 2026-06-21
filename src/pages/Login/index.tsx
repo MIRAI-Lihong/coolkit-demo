@@ -1,5 +1,6 @@
 import {Button, Card, Form, Input, message} from 'antd';
 import {useState} from 'react';
+import styles from './index.module.less';
 
 interface LoginFormValues {
   phone: string;
@@ -15,19 +16,8 @@ export default function Login() {
   };
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        backgroundColor: '#f5f5f5'
-      }}
-    >
-      <Card
-        title='系统登录'
-        style={{width: 400, boxShadow: '0 4px 12px rgba(0,0,0,0.1)'}}
-      >
+    <div className={styles.container}>
+      <Card title='系统登录' className={styles.loginCard}>
         <Form
           name='login'
           onFinish={onFinish}
