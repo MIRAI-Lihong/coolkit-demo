@@ -1,23 +1,56 @@
-import {Button, Card, Form, Input, message} from 'antd';
-import {useState} from 'react';
-import styles from './index.module.less';
+import {Button, Card, Form, Input, message} from 'antd'
+import {useState} from 'react'
+import styles from './index.module.less'
+import {loginAPI} from '@/apis/login'
+import type {ILoginAPI} from '@/types/login'
+import {setToken} from '../../utils/token'
+import {useNavigate} from 'react-router-dom'
 
 interface LoginFormValues {
-  phone: string;
-  password: string;
+  phoneNumber: string
+  password: string
 }
 
 export default function Login() {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate()
 
-  const onFinish = async (values: LoginFormValues) => {
-    setLoading(true);
-    console.log(values);
-  };
+  const onFinish = async (formValues: LoginFormValues) => {
+    setLoading(true)
+
+    const countryCode = '+86'
+    const {phoneNumber, password} = formValues
+    const params: ILoginAPI = {
+      password,
+      phoneNumber: countryCode + phoneNumber,
+      countryCode
+    }
+
+    try {
+      const res = await loginAPI(params)
+      const {at} = res.data
+      setToken(at)
+      if (res.error === 0) {
+        message.success('登录成功')
+        setTimeout(() => {
+          navigate('/')
+        }, 500)
+      } else if (res.error === 10001) {
+        message.error(res.msg)
+      } else {
+        message.error(res.msg ?? '登录失败，请检查手机号或密码')
+      }
+    } catch (error) {
+      console.log(error)
+      message.error((error as Error).message)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div className={styles.container}>
-      <Card title='系统登录' className={styles.loginCard}>
+      <Card title='登录' className={styles.loginCard}>
         <Form
           name='login'
           onFinish={onFinish}
@@ -25,10 +58,10 @@ export default function Login() {
           layout='vertical'
         >
           <Form.Item
-            label='账号(手机号)'
-            name='phone'
+            label='手机号'
+            name='phoneNumber'
             rules={[
-              {required: true, message: '请输入您的账号'},
+              {required: true, message: '请输入您的手机号'},
               {pattern: /^1[3456789]\d{9}$/, message: '请输入正确的手机号'}
             ]}
           >
@@ -57,5 +90,5 @@ export default function Login() {
         </Form>
       </Card>
     </div>
-  );
+  )
 }

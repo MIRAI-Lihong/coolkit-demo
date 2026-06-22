@@ -1,20 +1,20 @@
-import {createBrowserRouter} from 'react-router-dom';
+import {createBrowserRouter} from 'react-router-dom'
 
 const router = createBrowserRouter([
   {
     index: true,
     async lazy() {
-      const {default: Home} = await import('../pages/Home');
-      return {Component: Home};
+      const {default: Home} = await import('@/pages/Home')
+      return {Component: Home}
     }
   },
   {
     path: '/login',
     async lazy() {
-      const {default: Login} = await import('../pages/Login');
-      return {Component: Login};
+      const {default: Login} = await import('@/pages/Login')
+      return {Component: Login}
     }
   }
-]);
+])
 
-export {router};
+export {router}

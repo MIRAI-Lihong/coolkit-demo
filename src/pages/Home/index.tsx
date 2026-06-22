@@ -1,12 +1,29 @@
-import {Button, Result} from 'antd';
-import {useNavigate} from 'react-router-dom';
-import styles from './index.module.less';
+import {Button, Result} from 'antd'
+import {useNavigate} from 'react-router-dom'
+import styles from './index.module.less'
+import {useEffect} from 'react'
+import {getHomeInfoAPI} from '@/apis/home'
 
 export default function Home() {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
 
   // 跳转登录
-  const jumpLogin = () => navigate('/login');
+  const jumpLogin = () => navigate('/login')
+
+  useEffect(() => {
+    const getHomeInfo = async () => {
+      const param = {
+        getFamily: {},
+        getThing: {
+          num: 30
+        },
+        getUser: {}
+      }
+      const res = await getHomeInfoAPI(param)
+      console.log(res.data)
+    }
+    getHomeInfo()
+  }, [])
 
   return (
     <div className={styles.container}>
@@ -21,5 +38,5 @@ export default function Home() {
         ]}
       />
     </div>
-  );
+  )
 }
