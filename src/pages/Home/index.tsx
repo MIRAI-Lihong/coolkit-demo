@@ -3,13 +3,9 @@ import {useNavigate} from 'react-router-dom'
 import styles from './index.module.less'
 import {useEffect, useState} from 'react'
 import {getHomeInfoAPI} from '@/apis/home'
-import type {IFamilyListResponse} from '@/types/family'
-
-// interface Home
 
 export default function Home() {
   const navigate = useNavigate()
-  const [familyList, setFamilyList] = useState<IFamilyListResponse | null>(null)
 
   // 跳转登录
   const jumpLogin = () => navigate('/login')
@@ -20,13 +16,10 @@ export default function Home() {
         getFamily: {},
         getThing: {
           num: 30
-        },
-        getUser: {}
+        }
       }
-      const res = await getHomeInfoAPI(param)
-      const {thingInfo, familyInfo} = res.data
-      const {familyList, currentFamilyId} = familyInfo
-      setFamilyList({familyList, currentFamilyId})
+      const {data} = await getHomeInfoAPI(param)
+      console.log(data)
     }
     getHomeInfo()
   }, [])

@@ -1,5 +1,5 @@
 // 家庭成员
-export interface FamilyMember {
+export interface IFamilyMember {
   apikey: string
 
   phoneNumber?: string
@@ -19,7 +19,7 @@ export interface FamilyMember {
 }
 
 // 房间信息
-export interface Room {
+export interface IRoom {
   id: string
 
   name: string
@@ -30,13 +30,13 @@ export interface Room {
 }
 
 // 家庭类型
-interface FamilyType {
+interface IFamilyType {
   // 1 自己的家庭 2 别人分享的家庭
   familyType: 1 | 2
 }
 
 // 家庭信息
-export interface Family {
+export interface IFamily {
   id: string
 
   name: string
@@ -44,17 +44,17 @@ export interface Family {
   index: number
 
   // 房间列表
-  roomList?: Room[]
+  roomList?: IRoom[]
 
-  familyType: FamilyType
+  familyType: IFamilyType
 
-  members: FamilyMember[]
+  members: IFamilyMember[]
 }
 
 // 接口响应
 export interface IFamilyListResponse {
   // 家庭列表
-  familyList: Family[]
+  familyList: IFamily[]
 
   // 当前家庭 id
   currentFamilyId: string

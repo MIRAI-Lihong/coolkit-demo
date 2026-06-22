@@ -1,32 +1,32 @@
-interface DeviceExtra {
+interface IDeviceExtra {
   model: string
 }
 
-interface DeviceSwitch {
+interface IDeviceSwitch {
   switch: string
   outlet: number
 }
 
-interface DeviceParams {
-  switches: DeviceSwitch[]
+interface IDeviceParams {
+  switches: IDeviceSwitch[]
 }
 
-interface DeviceInfo {
+interface IDeviceInfo {
   name: string
   deviceid: string
   online: boolean
-  extra: DeviceExtra
-  params: DeviceParams
+  extra: IDeviceExtra
+  params: IDeviceParams
 }
 
-interface ThingItem {
+interface IThingItem {
   itemType: number
-  itemData: DeviceInfo
+  itemData: IDeviceInfo
   index: number
 }
 
-export interface ThingListResponse {
-  thingList: ThingItem[]
+export interface IThingListResponse {
+  thingList: IThingItem[]
   total: number
   filterTotal: number
 }
