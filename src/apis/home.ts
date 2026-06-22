@@ -15,9 +15,5 @@ interface IHomeInfoRequest {
 }
 
 export function getHomeInfoAPI(data: IHomeInfoRequest) {
-  return request({
-    url: '/v2/homepage',
-    method: 'POST',
-    data
-  })
+  return request.post<{data: IHomeInfoResponse}>('/v2/homepage', data)
 }

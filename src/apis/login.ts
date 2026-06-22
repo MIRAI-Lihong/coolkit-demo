@@ -1,10 +1,9 @@
-import type {ILoginAPI} from '@/types/login'
+import type {ILoginAPI, ILoginResponse} from '@/types/login'
 import {request} from '@/utils/request'
 
 export function loginAPI(data: ILoginAPI) {
-  return request({
-    url: '/v2/user/login',
-    method: 'POST',
+  return request.post<{error: number; msg: string; data: ILoginResponse}>(
+    '/v2/user/login',
     data
-  })
+  )
 }
