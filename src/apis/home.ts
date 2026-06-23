@@ -10,7 +10,7 @@ export interface IHomeInfoResponse {
 interface IHomeInfoRequest {
   getFamily: object
   getThing: {
-    num: number
+    num?: number
   }
 }
 

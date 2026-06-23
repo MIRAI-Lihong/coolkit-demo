@@ -17,8 +17,14 @@ interface IDeviceInfo {
   online: boolean
   extra: IDeviceExtra
   params: IDeviceParams
+  family: IDeviceFamily
 }
 
+interface IDeviceFamily {
+  familyid: string
+  index: number
+  roomid: string
+}
 interface IThingItem {
   itemType: number
   itemData: IDeviceInfo
