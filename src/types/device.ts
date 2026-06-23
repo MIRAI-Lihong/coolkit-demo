@@ -25,7 +25,7 @@ interface IDeviceFamily {
   index: number
   roomid: string
 }
-interface IThingItem {
+export interface IThingItem {
   itemType: number
   itemData: IDeviceInfo
   index: number

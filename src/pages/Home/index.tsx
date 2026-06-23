@@ -1,14 +1,12 @@
-import {useNavigate} from 'react-router-dom'
 import styles from './index.module.less'
 import {useHomeInfo} from './hooks/useHomeInfo'
 import Sider from '@/layout/Sider'
 import Loading from '@/components/Loading'
+import Header from '@/layout/Header'
+import {useMemo} from 'react'
+import Content from '@/layout/Content'
 
 export default function Home() {
-  // const navigate = useNavigate()
-  // // 跳转登录
-  // const jumpLogin = () => navigate('/login')
-
   // 获取业务状态
   const {
     loading,
@@ -18,6 +16,12 @@ export default function Home() {
     setSelectedRoomId,
     filterDeviceList
   } = useHomeInfo()
+
+  const currentSelectedMenu = useMemo(() => {
+    return selectedRoomId === ''
+      ? '全部设备'
+      : roomList.find(r => r.id === selectedRoomId)?.name
+  }, [selectedRoomId, roomList])
 
   const SiderProps = {
     currentFamily,
@@ -30,12 +34,14 @@ export default function Home() {
     return <Loading description='正在加载家庭信息' />
   }
 
-  console.log(filterDeviceList)
   return (
     <div className={styles.layout}>
       <Sider {...SiderProps}></Sider>
 
-      <div className={styles.main}></div>
+      <div className={styles.main}>
+        <Header menu={currentSelectedMenu as string} />
+        <Content deviceList={filterDeviceList} />
+      </div>
     </div>
   )
 }

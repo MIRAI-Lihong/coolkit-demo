@@ -1,7 +1,7 @@
 import {useState, useEffect, useMemo} from 'react'
 import {getHomeInfoAPI} from '@/apis/home'
 import type {IFamilyListResponse} from '@/types/family'
-import type {IThingListResponse} from '@/types/device'
+import type {IThingItem, IThingListResponse} from '@/types/device'
 
 export function useHomeInfo() {
   // 家庭信息
@@ -51,12 +51,20 @@ export function useHomeInfo() {
 
   // 筛选设备
   const filterDeviceList = useMemo(() => {
-    if (!thingInfo) return
+    const result: IThingItem[] = []
+    if (!thingInfo) return result
     // 没有selectedRoomId 返回全部设备
-    if (!selectedRoomId) return thingInfo.thingList
-    return thingInfo.thingList.find(
+    if (!selectedRoomId) return thingInfo.thingList || result
+    const filterDevice = thingInfo.thingList.find(
       thingItem => thingItem.itemData.family.roomid === selectedRoomId
     )
+    if (Array.isArray(filterDevice)) {
+      return filterDevice
+    } else if (filterDevice !== undefined) {
+      result.push(filterDevice)
+    }
+
+    return result
   }, [thingInfo, selectedRoomId])
 
   return {
