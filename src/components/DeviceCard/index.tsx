@@ -8,7 +8,7 @@ interface IDeviceCardProps {
 
 const DeviceCard = ({device}: IDeviceCardProps) => {
   const switches = device.itemData.params.switches
-  console.log(switches)
+  // console.log(switches)
   const toggle = () => {}
 
   return (

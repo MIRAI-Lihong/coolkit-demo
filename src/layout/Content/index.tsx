@@ -8,7 +8,7 @@ interface IContentProps {
 }
 
 const Content = ({deviceList}: IContentProps) => {
-  console.log(deviceList)
+  // console.log(deviceList)
   if (!deviceList || deviceList.length === 0) {
     return (
       <div className={styles.empty}>
