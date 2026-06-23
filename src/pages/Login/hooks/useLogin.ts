@@ -4,6 +4,7 @@ import {message} from 'antd'
 import {loginAPI} from '@/apis/login'
 import type {ILoginAPI} from '@/types/login'
 import {setToken} from '@/utils/token'
+import {setApiKey} from '@/utils/apikey'
 
 export interface LoginFormValues {
   phoneNumber: string
@@ -13,6 +14,11 @@ export interface LoginFormValues {
 export function useLogin() {
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+
+  const setLocalValue = (at: string, apiKey: string) => {
+    setToken(at)
+    setApiKey(apiKey)
+  }
 
   const handleLogin = async (formValues: LoginFormValues) => {
     setLoading(true)
@@ -30,8 +36,12 @@ export function useLogin() {
       const data = res.data
 
       if (data.error === 0) {
-        const {at} = data.data
-        setToken(at)
+        const {
+          at,
+          user: {apikey}
+        } = data.data
+        // 将at和apikey存在本地
+        setLocalValue(at, apikey)
         message.success('登录成功')
         setTimeout(() => {
           navigate('/')

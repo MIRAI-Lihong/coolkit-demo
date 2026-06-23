@@ -7,7 +7,7 @@ interface IDeviceSwitch {
   outlet: number
 }
 
-interface IDeviceParams {
+export interface IDeviceParams {
   switches: IDeviceSwitch[]
 }
 

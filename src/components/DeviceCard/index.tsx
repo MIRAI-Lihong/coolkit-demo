@@ -1,6 +1,7 @@
 import type {IThingItem} from '@/types/device'
 import styles from './index.module.less'
 import {Badge, Card, Switch} from 'antd'
+import {client} from '@/websocket/client'
 
 interface IDeviceCardProps {
   device: IThingItem
@@ -10,6 +11,8 @@ const DeviceCard = ({device}: IDeviceCardProps) => {
   const switches = device.itemData.params.switches
   // console.log(switches)
   const toggle = () => {}
+
+  client.query(device.itemData.deviceid)
 
   return (
     <Card key={device.itemData.deviceid}>

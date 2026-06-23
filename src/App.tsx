@@ -1,8 +1,17 @@
-import {RouterProvider} from 'react-router-dom';
-import {router} from './router';
+import {RouterProvider} from 'react-router-dom'
+import {router} from '@/router'
+import {client} from '@/websocket/client'
+import {useEffect} from 'react'
 
 function App() {
-  return <RouterProvider router={router} />;
+  useEffect(() => {
+    client.connect()
+
+    return () => {
+      client.disconnect()
+    }
+  }, [])
+  return <RouterProvider router={router} />
 }
 
-export default App;
+export default App
