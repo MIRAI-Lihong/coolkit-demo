@@ -1,5 +1,6 @@
 import {createBrowserRouter} from 'react-router-dom'
 
+// todo 路由鉴权，未登录的话需要跳转到登录页
 const router = createBrowserRouter([
   {
     index: true,

@@ -1,10 +1,22 @@
-.deviceContent {
+.deviceContainer {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 20px;
 
-  .deviceName {
-    font-weight: bold;
-    font-size: 16px;
+  .deviceContent {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .deviceName {
+      font-weight: bold;
+      font-size: 16px;
+    }
+  }
+
+  .deviceFoot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
 }
