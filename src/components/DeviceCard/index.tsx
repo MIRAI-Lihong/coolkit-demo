@@ -38,8 +38,11 @@ const DeviceCard = ({device}: IDeviceCardProps) => {
   useEffect(() => {
     async function fetchSwitch(deviceid: string) {
       try {
-        const res = await client.query(deviceid)
-        setSwitches(res?.params?.switches || [])
+        const res = await client.query(deviceid, ['switches'])
+        const newSwitches = res?.params?.switches
+        if (newSwitches && newSwitches.length > 0) {
+          setSwitches(newSwitches)
+        }
       } catch (error) {
         console.error(error)
       }
