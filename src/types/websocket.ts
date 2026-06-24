@@ -1,3 +1,5 @@
+import type {IDeviceParams} from './device'
+
 export interface IDispatchResponse {
   port: number
   domain: string
@@ -28,6 +30,10 @@ interface IMessageConfigResponse {
 }
 
 export interface IMessageResponse {
-  config: IMessageConfigResponse
-  error: number
+  config?: IMessageConfigResponse
+  error?: number
+  action?: string
+  params?: IDeviceParams
+  userAgent?: string
+  sequence?: string
 }

@@ -5,6 +5,12 @@ import {getApiKey} from '@/utils/apikey'
 import type {IMessageResponse} from '@/types/websocket'
 import type {IDeviceParams} from '@/types/device'
 
+type ActionMessageHandler = (data: IMessageResponse) => void
+interface IPendingHandler {
+  resolve: (value: IMessageResponse) => void
+  reject: (value: IMessageResponse) => void
+}
+
 function getAuth() {
   const at = getToken()
   const apikey = getApiKey()
@@ -15,6 +21,8 @@ function getAuth() {
 class Client {
   private ws: WebSocket | null = null
   private heartbeatTimer: number | null = null
+  private pendingMap = new Map<string, IPendingHandler>()
+  private listener = new Map<string, Set<ActionMessageHandler>>()
 
   constructor() {}
 
@@ -53,7 +61,7 @@ class Client {
   }
 
   // 握手
-  handshake(at: string, apikey: string, appid: string) {
+  private handshake(at: string, apikey: string, appid: string) {
     const data = {
       action: 'userOnline',
       version: 8,
@@ -69,14 +77,18 @@ class Client {
     this.send(data)
   }
 
-  // 处理
-  messageHandler(data: IMessageResponse) {
-    if (data.error === 0) {
-      // 成功获取到消息后，计算心跳间隔
-      const hbInterval = data.config.hbInterval * (0.8 + Math.random() * 0.2)
-      // 开启心跳
-      this.startHeartbeat(hbInterval)
+  // 消息处理
+  private messageHandler(data: IMessageResponse) {
+    if (data.action) {
+      this.actionHandler(data)
+      return
+    } else if (data.config) {
+      // userOnline 信息处理 开启心跳
+      this.startHeartbeat(data.config.hbInterval)
+      return
     }
+    // 查询消息处理
+    this.queryHandler(data)
   }
 
   // 取消连接
@@ -87,56 +99,94 @@ class Client {
   }
 
   // 查询设备信息
-  query(deviceid: string) {
+  query(deviceid: string, params: string[] = []) {
     const {apikey} = getAuth()
-    const data = {
+    return this.request({
       action: 'query',
       deviceid,
       apikey,
-      sequence: Date.now().toString(),
-      params: ['switches'], // 如果返回为空，可以使用[]查询所有字段状态
+      params, // 可以使用[]查询所有字段状态
       userAgent: 'app'
-    }
-    this.send(data)
+    })
   }
 
   // 更新设备
-  // todo params 格式确定
   update(deviceid: string, params: IDeviceParams) {
     const {apikey} = getAuth()
-    const data = {
+    return this.request({
       action: 'update',
       deviceid,
       apikey,
-      userAgent: 'app',
-      sequence: Date.now().toString(),
-      params
-    }
-    this.send(data)
+      params,
+      userAgent: 'app'
+    })
   }
 
   // 开启心跳
-  startHeartbeat(hbInterval: number) {
+  private startHeartbeat(hbInterval: number) {
     this.stopHeartbeat()
-    // console.log(hbInterval * 1000 + 's')
+    // 计算心跳间隔
+    const newHbInterval = hbInterval * (0.8 + Math.random() * 0.2) * 1000
     this.heartbeatTimer = setInterval(() => {
       // todo ping 的格式不确定
-      this.send({ping: 'ping'})
-    }, hbInterval * 1000)
+      this.send({type: 'ping'})
+    }, newHbInterval)
   }
 
   // 停止心跳
-  stopHeartbeat() {
+  private stopHeartbeat() {
     if (this.heartbeatTimer) {
       clearInterval(this.heartbeatTimer)
     }
   }
 
   // ws 发送消息
-  send(data: object) {
-    if (this.ws) {
-      this.ws.send(JSON.stringify(data))
+  private send(data: object) {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return
+    this.ws.send(JSON.stringify(data))
+  }
+
+  // 将消息的返回结果封装成一个Promise
+  private request(data: object) {
+    return new Promise<IMessageResponse>((resolve, reject) => {
+      const sequence = Date.now().toString()
+
+      this.pendingMap.set(sequence, {
+        resolve,
+        reject
+      })
+
+      this.send({...data, sequence})
+    })
+  }
+
+  private actionHandler(data: IMessageResponse) {
+    // 设备 update 消息回调
+    if (data.userAgent === 'device') {
+      this.emit('device_update', data)
     }
+  }
+
+  private queryHandler(data: IMessageResponse) {
+    const task = this.pendingMap.get(data.sequence as string)
+    if (!task) return
+    task.resolve(data)
+    this.pendingMap.delete(data.sequence as string)
+  }
+
+  on(event: string, callback: (data: IMessageResponse) => void) {
+    if (!this.listener.get(event)) {
+      this.listener.set(event, new Set())
+    }
+    this.listener.get(event)?.add(callback)
+  }
+
+  off(event: string, callback: (data: IMessageResponse) => void) {
+    this.listener.get(event)?.delete(callback)
+  }
+
+  private emit(event: string, data: IMessageResponse) {
+    this.listener.get(event)?.forEach(cb => cb(data))
   }
 }
 
