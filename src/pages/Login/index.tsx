@@ -1,9 +1,9 @@
-import {Button, Card, Form, Input} from 'antd'
+import {Button, Card, Form, Input, Select, Space} from 'antd'
 import styles from './index.module.less'
 import {useLogin} from './hooks/useLogin'
 
 export default function Login() {
-  const {loading, handleLogin} = useLogin()
+  const {loading, handleLogin, options} = useLogin()
 
   return (
     <div className={styles.container}>
@@ -22,7 +22,14 @@ export default function Login() {
               {pattern: /^1[3456789]\d{9}$/, message: '请输入正确的手机号'}
             ]}
           >
-            <Input placeholder='手机号' />
+            <Space.Compact style={{width: '100%'}}>
+              <Select
+                style={{width: '50%'}}
+                defaultValue={'中国(+86)'}
+                options={options}
+              />
+              <Input style={{width: '50%'}} placeholder='手机号' />
+            </Space.Compact>
           </Form.Item>
 
           <Form.Item

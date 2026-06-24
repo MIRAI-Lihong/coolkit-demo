@@ -1,10 +1,11 @@
-import {useState} from 'react'
+import {useMemo, useState} from 'react'
 import {useNavigate} from 'react-router-dom'
 import {message} from 'antd'
 import {loginAPI} from '@/apis/login'
 import type {ILoginAPI} from '@/types/login'
 import {setToken} from '@/utils/token'
 import {setApiKey} from '@/utils/apikey'
+import {areaCodes} from '../data'
 
 export interface LoginFormValues {
   phoneNumber: string
@@ -21,6 +22,7 @@ export function useLogin() {
   }
 
   const handleLogin = async (formValues: LoginFormValues) => {
+    console.log(formValues)
     setLoading(true)
 
     const countryCode = '+86'
@@ -59,8 +61,19 @@ export function useLogin() {
     }
   }
 
+  const options = useMemo(() => {
+    return areaCodes.map(area => {
+      const [areaCode, areaName] = Object.entries(area)[0]
+      return {
+        value: areaCode,
+        label: `${areaName}(${areaCode})`
+      }
+    })
+  }, [])
+
   return {
     loading,
+    options,
     handleLogin
   }
 }
