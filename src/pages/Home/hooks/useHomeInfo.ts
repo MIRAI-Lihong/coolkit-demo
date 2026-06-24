@@ -67,6 +67,13 @@ export function useHomeInfo() {
     return result
   }, [thingInfo, selectedRoomId])
 
+  // 当前选择房间
+  const currentSelectedMenu = useMemo(() => {
+    return selectedRoomId === ''
+      ? '全部设备'
+      : (roomList.find(r => r.id === selectedRoomId)?.name ?? '')
+  }, [selectedRoomId, roomList])
+
   return {
     familyInfo,
     thingInfo,
@@ -75,6 +82,7 @@ export function useHomeInfo() {
     roomList,
     selectedRoomId,
     filterDeviceList,
+    currentSelectedMenu,
     setSelectedRoomId
   }
 }
