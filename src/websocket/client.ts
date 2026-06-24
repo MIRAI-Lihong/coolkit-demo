@@ -161,9 +161,7 @@ class Client {
 
   private actionHandler(data: IMessageResponse) {
     // 设备 update 消息回调
-    if (data.userAgent === 'device') {
-      this.emit('device_update', data)
-    }
+    this.emit('device_update', data)
   }
 
   private queryHandler(data: IMessageResponse) {
