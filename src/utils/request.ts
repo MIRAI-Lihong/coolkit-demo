@@ -2,7 +2,8 @@
 import axios from 'axios'
 import {createSign} from './encryption'
 import {getAppId, getAppSecret, getNonce} from './getEnv'
-import {getToken} from './token'
+import {getToken, removeToken} from './token'
+import {message} from 'antd'
 
 const request = axios.create({
   baseURL: '/api',
@@ -37,6 +38,11 @@ request.interceptors.request.use(
 // 响应拦截器
 request.interceptors.response.use(
   response => {
+    if (response.status === 401 || response.data?.error === 401) {
+      message.warning('登录已失效，请重新登录')
+      removeToken()
+      window.location.href = '/login'
+    }
     return response
   },
   error => {
