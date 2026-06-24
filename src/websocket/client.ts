@@ -128,8 +128,7 @@ class Client {
     // 计算心跳间隔
     const newHbInterval = hbInterval * (0.8 + Math.random() * 0.2) * 1000
     this.heartbeatTimer = setInterval(() => {
-      // todo ping 的格式不确定
-      this.send({type: 'ping'})
+      this.send('ping')
     }, newHbInterval)
   }
 
@@ -141,13 +140,13 @@ class Client {
   }
 
   // ws 发送消息
-  private send(data: object) {
+  private send<T>(data: T) {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return
     this.ws.send(JSON.stringify(data))
   }
 
   // 将消息的返回结果封装成一个Promise
-  private request(data: object) {
+  private request<T>(data: T) {
     return new Promise<IMessageResponse>((resolve, reject) => {
       const sequence = Date.now().toString()
 

@@ -7,8 +7,20 @@ import {useState, useEffect} from 'react'
 const useDevice = (device: IThingItem) => {
   const deviceid = device?.itemData.deviceid
   const [switches, setSwitches] = useState(device.itemData.params.switches)
+  const [switchLoadingMap, setSwitchLoadingMap] = useState<
+    Map<number, boolean>
+  >(new Map())
+
+  function setLoading(outlet: number, loading: boolean) {
+    setSwitchLoadingMap(prev => {
+      const next = new Map(prev)
+      next.set(outlet, loading)
+      return next
+    })
+  }
 
   const toggle = async (checked: boolean, outlet: number) => {
+    setLoading(outlet, true)
     const newSwitches = [...switches]
     newSwitches.map(sw => {
       if (sw.outlet === outlet) {
@@ -24,6 +36,7 @@ const useDevice = (device: IThingItem) => {
       if (res.error === 0) {
         setSwitches(newSwitches)
       }
+      setLoading(outlet, false)
     } catch (error) {
       console.error(error)
       message.error('设备控制失败')
@@ -57,9 +70,11 @@ const useDevice = (device: IThingItem) => {
       client.off('device_update', updateSwitch)
     }
   }, [])
+
   return {
     switches,
-    toggle
+    toggle,
+    switchLoadingMap
   }
 }
 

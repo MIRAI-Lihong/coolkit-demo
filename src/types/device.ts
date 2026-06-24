@@ -2,7 +2,7 @@ interface IDeviceExtra {
   model: string
 }
 
-interface IDeviceSwitch {
+export interface IDeviceSwitch {
   switch: string
   outlet: number
 }
