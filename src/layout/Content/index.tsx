@@ -1,29 +1,44 @@
 import type {IThingItem} from '@/types/device'
 import styles from './index.module.less'
-import {Empty} from 'antd'
 import DeviceCard from '@/components/DeviceCard'
+import Search from 'antd/es/input/Search'
+import useFilter from './hooks/useFilter'
+import ContentEmpty from './components/ContentEmpty'
 
 interface IContentProps {
   deviceList: IThingItem[]
 }
 
 const Content = ({deviceList}: IContentProps) => {
-  // console.log(deviceList)
-  if (!deviceList || deviceList.length === 0) {
-    return (
-      <div className={styles.empty}>
-        <Empty description='该房间下暂无设备' />
-      </div>
-    )
+  const {query, searchList, onSearch} = useFilter(deviceList)
+
+  const hasQuery = query.trim().length > 0
+  const shownList = searchList ?? deviceList
+
+  if (deviceList.length === 0) {
+    return <ContentEmpty type="room" />
   }
 
   return (
     <div className={styles.container}>
-      <div className={styles.deviceList}>
-        {deviceList.map(device => (
-          <DeviceCard device={device} />
-        ))}
+      <div className={styles.utilContainer}>
+        <Search
+          placeholder='搜索设备'
+          allowClear
+          onSearch={onSearch}
+          style={{width: 200}}
+        />
       </div>
+
+      {hasQuery && shownList.length === 0 ? (
+        <ContentEmpty type="search" />
+      ) : (
+        <div className={styles.deviceList}>
+          {shownList.map(device => (
+            <DeviceCard key={device.itemData.deviceid} device={device} />
+          ))}
+        </div>
+      )}
     </div>
   )
 }
