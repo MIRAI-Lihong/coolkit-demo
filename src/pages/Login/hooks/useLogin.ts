@@ -11,6 +11,7 @@ import {
   refreshTokenStorage,
   regionStorage
 } from '@/utils/storage'
+import {client} from '@/websocket/client'
 
 interface LoginFormValues {
   phoneNumber: string
@@ -19,9 +20,11 @@ interface LoginFormValues {
 }
 
 export function useLogin() {
+  // 登录loading
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
+  // 统一将数据存储在本地
   const setLocalValue = (
     at: string,
     apiKey: string,
@@ -34,8 +37,10 @@ export function useLogin() {
     refreshTokenStorage.set(rt)
   }
 
+  // 登录逻辑
   const handleLogin = async (formValues: LoginFormValues) => {
     const {phoneNumber, password, countryCode} = formValues
+    // 电话格式 +8615390228021
     const splicingPhone = countryCode + phoneNumber
     const params: ILoginAPI = {
       password,
@@ -57,6 +62,8 @@ export function useLogin() {
         } = data.data
         // 将at、apikey、region、rt存在本地
         setLocalValue(at, apikey, region, rt)
+        // 开启长连接
+        client.connect()
         message.success('登录成功')
         setTimeout(() => {
           navigate('/')
@@ -81,6 +88,7 @@ export function useLogin() {
     }
   }
 
+  // 处理区号下拉框数据
   const options = useMemo(() => {
     return areaCodes.map(area => {
       const [areaCode, areaName] = Object.entries(area)[0]

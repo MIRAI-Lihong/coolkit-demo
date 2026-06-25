@@ -127,6 +127,7 @@ class Client {
     this.stopHeartbeat()
     // 计算心跳间隔
     const newHbInterval = hbInterval * (0.8 + Math.random() * 0.2) * 1000
+    // 开启心跳定时
     this.heartbeatTimer = setInterval(() => {
       this.send('ping')
     }, newHbInterval)
@@ -148,29 +149,38 @@ class Client {
   // 将消息的返回结果封装成一个Promise
   private request<T>(data: T) {
     return new Promise<IMessageResponse>((resolve, reject) => {
+      // 时间戳，通过时间戳来表示同一次操作
       const sequence = Date.now().toString()
 
+      // 记录当前任务记录
       this.pendingMap.set(sequence, {
         resolve,
         reject
       })
 
+      // 发送查询信息给服务端
       this.send({...data, sequence})
     })
   }
 
+  // 设备更新处理
   private actionHandler(data: IMessageResponse) {
-    // 设备 update 消息回调
+    // 设备 update 消息回调 将数据传给回调函数
     this.emit('device_update', data)
   }
 
+  // 查询数据处理
   private queryHandler(data: IMessageResponse) {
+    // 当ws服务器下发查询数据后，找到之前存取的任务
     const task = this.pendingMap.get(data.sequence as string)
     if (!task) return
+    // 然后兑现Promise，将数据返回
     task.resolve(data)
+    // 当前任务执行完成，直接删除
     this.pendingMap.delete(data.sequence as string)
   }
 
+  // 监听任务 存储回调
   on(event: string, callback: (data: IMessageResponse) => void) {
     if (!this.listener.get(event)) {
       this.listener.set(event, new Set())
@@ -178,12 +188,19 @@ class Client {
     this.listener.get(event)?.add(callback)
   }
 
+  // 关闭监听 删除回调
   off(event: string, callback: (data: IMessageResponse) => void) {
     this.listener.get(event)?.delete(callback)
   }
 
+  // 消费
   private emit(event: string, data: IMessageResponse) {
+    // 取出回调进行消费
     this.listener.get(event)?.forEach(cb => cb(data))
+  }
+
+  reconnect() {
+    setTimeout(() => {})
   }
 }
 

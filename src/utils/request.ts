@@ -47,6 +47,7 @@ request.interceptors.request.use(
 // 响应拦截器
 request.interceptors.response.use(
   async response => {
+    // 当响应 401 时 调用刷新at的接口
     if (response.data?.error === 401) {
       await refresh()
     }

@@ -6,7 +6,6 @@ import {useEffect} from 'react'
 function App() {
   useEffect(() => {
     client.connect()
-
     return () => {
       client.disconnect()
     }

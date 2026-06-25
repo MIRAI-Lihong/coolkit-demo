@@ -9,6 +9,7 @@ export function useHomeInfo() {
   // 设备信息
   const [thingInfo, setThingInfo] = useState<IThingListResponse | null>(null)
   const [loading, setLoading] = useState<boolean>(false)
+  // 左侧侧边栏选择的房间
   const [selectedRoomId, setSelectedRoomId] = useState<string>('')
 
   useEffect(() => {
@@ -55,6 +56,7 @@ export function useHomeInfo() {
     if (!thingInfo) return result
     // 没有selectedRoomId 返回全部设备
     if (!selectedRoomId) return thingInfo.thingList || result
+    // 返回设备列表
     const filterDevice = thingInfo.thingList.find(
       thingItem => thingItem.itemData.family.roomid === selectedRoomId
     )
