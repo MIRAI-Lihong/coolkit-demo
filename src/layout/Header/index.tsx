@@ -1,18 +1,25 @@
-import {Button} from 'antd'
+import {Button, message} from 'antd'
 import styles from './index.module.less'
 import {useNavigate} from 'react-router-dom'
-import {removeToken} from '@/utils/token'
+import {accessTokenStorage} from '@/utils/storage'
+import {logoutAPI} from '@/apis/user'
 
 const Header = ({menu}: Record<string, string>) => {
   const navigate = useNavigate()
   // 跳转登录页
   const jumpLogin = () => navigate('/login')
 
-  const logOut = () => {
-    // 先把at删除掉
-    removeToken()
-    // 再跳转到登录页
-    jumpLogin()
+  const logOut = async () => {
+    try {
+      await logoutAPI()
+      // 先把at删除掉
+      accessTokenStorage.remove()
+      // 再跳转到登录页
+      jumpLogin()
+    } catch (error) {
+      console.error(error)
+      message.error('退出登录失败')
+    }
   }
   return (
     <div className={styles.header}>

@@ -1,7 +1,7 @@
 import React, {useEffect} from 'react'
 import {useNavigate} from 'react-router-dom'
 import {message} from 'antd'
-import {getToken} from '@/utils/token'
+import {accessTokenStorage} from '@/utils/storage'
 
 interface AuthComponentProps {
   children: React.ReactNode
@@ -10,7 +10,7 @@ interface AuthComponentProps {
 const AuthComponent: React.FC<AuthComponentProps> = ({children}) => {
   const navigate = useNavigate()
 
-  const hasToken = Boolean(getToken())
+  const hasToken = Boolean(accessTokenStorage.get())
 
   useEffect(() => {
     if (!hasToken) {

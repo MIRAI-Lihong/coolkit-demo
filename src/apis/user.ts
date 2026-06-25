@@ -7,3 +7,7 @@ export function loginAPI(data: ILoginAPI) {
     data
   )
 }
+
+export function logoutAPI() {
+  return request.delete('/v2/user/logout')
+}

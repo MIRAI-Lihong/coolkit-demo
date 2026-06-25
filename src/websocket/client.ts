@@ -1,9 +1,9 @@
 import {getLongConnectionAPI} from '@/apis/connect'
 import {getAppId, getNonce} from '@/utils/getEnv'
-import {getToken} from '@/utils/token'
-import {getApiKey} from '@/utils/apikey'
+
 import type {IMessageResponse} from '@/types/websocket'
 import type {IDeviceParams} from '@/types/device'
+import {accessTokenStorage, apiKeyStorage} from '@/utils/storage'
 
 type ActionMessageHandler = (data: IMessageResponse) => void
 interface IPendingHandler {
@@ -12,8 +12,8 @@ interface IPendingHandler {
 }
 
 function getAuth() {
-  const at = getToken()
-  const apikey = getApiKey()
+  const at = accessTokenStorage.get()
+  const apikey = apiKeyStorage.get()
   const appid = getAppId()
   return {at, apikey, appid}
 }
