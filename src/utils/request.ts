@@ -3,8 +3,8 @@ import axios from 'axios'
 import {createSign} from './encryption'
 import {getAppId, getAppSecret, getNonce} from './getEnv'
 import {accessTokenStorage, regionStorage} from './storage'
-import {message} from 'antd'
 import {regionMap} from '@/configs/region'
+import {refresh} from './refresh'
 
 const request = axios.create({
   baseURL: '/us',
@@ -46,11 +46,9 @@ request.interceptors.request.use(
 )
 // 响应拦截器
 request.interceptors.response.use(
-  response => {
-    if (response.status === 401 || response.status === 402) {
-      message.warning('登录已失效，请重新登录')
-      accessTokenStorage.remove()
-      window.location.href = '/login'
+  async response => {
+    if (response.data?.error === 401) {
+      await refresh()
     }
     return response
   },

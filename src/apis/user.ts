@@ -11,5 +11,3 @@ export function loginAPI(data: ILoginAPI) {
 export function logoutAPI() {
   return request.delete('/v2/user/logout')
 }
-
-export function getRegion() {}

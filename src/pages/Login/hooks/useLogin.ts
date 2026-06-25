@@ -5,7 +5,12 @@ import {loginAPI} from '@/apis/user'
 import type {ILoginAPI} from '@/types/login'
 
 import {areaCodes} from '../data'
-import {accessTokenStorage, apiKeyStorage, regionStorage} from '@/utils/storage'
+import {
+  accessTokenStorage,
+  apiKeyStorage,
+  refreshTokenStorage,
+  regionStorage
+} from '@/utils/storage'
 
 interface LoginFormValues {
   phoneNumber: string
@@ -17,10 +22,16 @@ export function useLogin() {
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
-  const setLocalValue = (at: string, apiKey: string, region: string) => {
+  const setLocalValue = (
+    at: string,
+    apiKey: string,
+    region: string,
+    rt: string
+  ) => {
     accessTokenStorage.set(at)
     apiKeyStorage.set(apiKey)
     regionStorage.set(region)
+    refreshTokenStorage.set(rt)
   }
 
   const handleLogin = async (formValues: LoginFormValues) => {
@@ -40,11 +51,12 @@ export function useLogin() {
       if (data.error === 0) {
         const {
           at,
+          rt,
           user: {apikey},
           region
         } = data.data
-        // 将at、apikey、region存在本地
-        setLocalValue(at, apikey, region)
+        // 将at、apikey、region、rt存在本地
+        setLocalValue(at, apikey, region, rt)
         message.success('登录成功')
         setTimeout(() => {
           navigate('/')
