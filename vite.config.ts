@@ -6,10 +6,25 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/api': {
+      '/cn': {
         target: 'https://cn-apia.coolkit.cn',
         changeOrigin: true,
-        rewrite: path => path.replace(/^\/api/, '')
+        rewrite: path => path.replace(/^\/cn/, '')
+      },
+      '/as': {
+        target: 'https://as-apia.coolkit.cc',
+        changeOrigin: true,
+        rewrite: path => path.replace(/^\/as/, '')
+      },
+      '/us': {
+        target: 'https://us-apia.coolkit.cc',
+        changeOrigin: true,
+        rewrite: path => path.replace(/^\/us/, '')
+      },
+      '/eu': {
+        target: 'https://eu-apia.coolkit.cc',
+        changeOrigin: true,
+        rewrite: path => path.replace(/^\/eu/, '')
       }
     }
   },

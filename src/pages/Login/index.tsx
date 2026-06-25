@@ -13,22 +13,28 @@ export default function Login() {
           onFinish={handleLogin}
           autoComplete='off'
           layout='vertical'
+          initialValues={{countryCode: '+86'}}
         >
-          <Form.Item
-            label='手机号'
-            name='phoneNumber'
-            rules={[
-              {required: true, message: '请输入您的手机号'},
-              {pattern: /^1[3456789]\d{9}$/, message: '请输入正确的手机号'}
-            ]}
-          >
+          <Form.Item label='手机号'>
             <Space.Compact style={{width: '100%'}}>
-              <Select
-                style={{width: '50%'}}
-                defaultValue={'中国(+86)'}
-                options={options}
-              />
-              <Input style={{width: '50%'}} placeholder='手机号' />
+              <Form.Item
+                name='countryCode'
+                noStyle
+                rules={[{required: true, message: '请选择区号'}]}
+              >
+                <Select style={{width: '40%'}} options={options} />
+              </Form.Item>
+
+              <Form.Item
+                name='phoneNumber'
+                noStyle
+                rules={[
+                  {required: true, message: '请输入您的手机号'},
+                  {pattern: /^1[3456789]\d{9}$/, message: '请输入正确的手机号'}
+                ]}
+              >
+                <Input style={{width: '60%'}} placeholder='手机号' />
+              </Form.Item>
             </Space.Compact>
           </Form.Item>
 

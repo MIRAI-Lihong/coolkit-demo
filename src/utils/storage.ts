@@ -8,4 +8,4 @@ function createStorage<T extends string>(key: string) {
 
 export const accessTokenStorage = createStorage('ACCESS_TOKEN')
 export const apiKeyStorage = createStorage('USER_API_KEY')
-export const refreshTokenStorage = createStorage('USER_INFO')
+export const regionStorage = createStorage('USER_REGION')

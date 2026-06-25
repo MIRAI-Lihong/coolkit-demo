@@ -2,17 +2,26 @@
 import axios from 'axios'
 import {createSign} from './encryption'
 import {getAppId, getAppSecret, getNonce} from './getEnv'
-import {getToken, removeToken} from './token'
+import {accessTokenStorage, regionStorage} from './storage'
 import {message} from 'antd'
+import {regionMap} from '@/configs/region'
 
 const request = axios.create({
-  baseURL: '/api',
+  baseURL: '/us',
   timeout: 30000
 })
 
 // 请求拦截器
 request.interceptors.request.use(
   config => {
+    // 根据地区动态设置baseURL
+    const region = regionStorage.get()
+    if (region) {
+      const baseURL = regionMap[region as keyof typeof regionMap]
+      config.baseURL = baseURL
+    }
+
+    // 设置通用请求头
     config.headers.set('X-CK-Appid', getAppId())
     config.headers.set('X-CK-Nonce', getNonce())
     config.headers.set('Content-Type', 'application/json')
@@ -25,7 +34,7 @@ request.interceptors.request.use(
       config.headers.Authorization = `Sign ${sign}`
     } else {
       // 不是登录接口，直接从本地获取到at
-      const at = getToken()
+      const at = accessTokenStorage.get()
       config.headers.Authorization = `Bearer ${at}`
     }
 
@@ -38,9 +47,9 @@ request.interceptors.request.use(
 // 响应拦截器
 request.interceptors.response.use(
   response => {
-    if (response.status === 401 || response.data?.error === 401) {
+    if (response.status === 401 || response.status === 402) {
       message.warning('登录已失效，请重新登录')
-      removeToken()
+      accessTokenStorage.remove()
       window.location.href = '/login'
     }
     return response

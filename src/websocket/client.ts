@@ -1,4 +1,4 @@
-import {getLongConnectionAPI} from '@/apis/connect'
+import {getLongConnectionAPI} from '@/apis/general'
 import {getAppId, getNonce} from '@/utils/getEnv'
 
 import type {IMessageResponse} from '@/types/websocket'
