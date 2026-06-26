@@ -8,6 +8,14 @@ export interface IDeviceParams {
   switches: IDeviceSwitch[]
 }
 
+interface IChannelName {
+  [index: string]: string
+}
+
+interface ITags {
+  ck_channel_name: IChannelName
+}
+
 interface IDeviceInfo {
   // 设备名
   name: string
@@ -17,6 +25,7 @@ interface IDeviceInfo {
   params: IDeviceParams
   // 所属家庭
   family: IDeviceFamily
+  tags: ITags
 }
 
 interface IDeviceFamily {

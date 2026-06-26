@@ -2,7 +2,7 @@ import type {IThingItem} from '@/types/device'
 import type {IMessageResponse} from '@/types/websocket'
 import {client} from '@/websocket/client'
 import {message} from 'antd'
-import {useState, useEffect} from 'react'
+import {useState, useEffect, useMemo} from 'react'
 
 const useDevice = (device: IThingItem) => {
   const deviceid = device?.itemData.deviceid
@@ -50,6 +50,18 @@ const useDevice = (device: IThingItem) => {
     }
   }
 
+  // 处理开关名称
+  const channelName = useMemo(() => {
+    return Object.entries(device.itemData.tags.ck_channel_name).map(
+      ([key, value]) => {
+        return {
+          key,
+          value
+        }
+      }
+    )
+  }, [device])
+
   useEffect(() => {
     async function fetchSwitch(deviceid: string) {
       try {
@@ -86,7 +98,8 @@ const useDevice = (device: IThingItem) => {
   return {
     switches,
     toggle,
-    switchLoadingMap
+    switchLoadingMap,
+    channelName
   }
 }
 

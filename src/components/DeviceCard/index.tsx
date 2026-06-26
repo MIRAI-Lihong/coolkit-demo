@@ -8,7 +8,7 @@ interface IDeviceCardProps {
 }
 
 const DeviceCard = ({device}: IDeviceCardProps) => {
-  const {switches, toggle, switchLoadingMap} = useDevice(device)
+  const {switches, toggle, switchLoadingMap, channelName} = useDevice(device)
 
   return (
     <Card key={device.itemData.deviceid}>
@@ -29,7 +29,9 @@ const DeviceCard = ({device}: IDeviceCardProps) => {
                 checked={sw.switch === 'on'}
                 onChange={checked => toggle(checked, sw.outlet)}
               />
-              <div className={styles.switchName}>通道{index + 1}</div>
+              <div className={styles.switchName} key={channelName[index].key}>
+                {channelName[index].value}
+              </div>
             </div>
           ))}
         </div>
