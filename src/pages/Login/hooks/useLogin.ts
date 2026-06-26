@@ -19,6 +19,16 @@ interface LoginFormValues {
   countryCode: string
 }
 
+// 错误码
+enum ErrorCode {
+  // 密码错误
+  PASSWORD_ERROR = 10001,
+  // 用户不存在
+  NotExist_ERROR = 10003,
+  // 重定向
+  REDIRECT_ERROR = 10004
+}
+
 export function useLogin() {
   // 登录loading
   const [loading, setLoading] = useState(false)
@@ -68,17 +78,25 @@ export function useLogin() {
         setTimeout(() => {
           navigate('/')
         }, 500)
+        return
       }
-      if (data.error === 10001) {
-        message.error('登录密码错误')
-      }
-      if (data.error === 10003) {
-        message.error('用户不存在')
-      }
-      if (data.error === 10004) {
-        // 此时会接口会进行重定向，返回当前手机号的region，重新登录
-        regionStorage.set(data.data.region)
-        await handleLogin(formValues)
+
+      // 错误状态
+      switch (data.error) {
+        case ErrorCode.PASSWORD_ERROR:
+          message.error('登录密码错误')
+          break
+        case ErrorCode.NotExist_ERROR:
+          message.error('用户不存在')
+          break
+        case ErrorCode.REDIRECT_ERROR:
+          // 重定向，返回当前手机号的region，重新登录
+          regionStorage.set(data.data.region)
+          await handleLogin(formValues)
+          break
+        default:
+          message.error('登录失败，请检查账号和密码')
+          break
       }
     } catch (error) {
       console.log(error)

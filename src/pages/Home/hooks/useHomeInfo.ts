@@ -57,16 +57,11 @@ export function useHomeInfo() {
     // 没有selectedRoomId 返回全部设备
     if (!selectedRoomId) return thingInfo.thingList || result
     // 返回设备列表
-    const filterDevice = thingInfo.thingList.find(
+    const filterDevice = thingInfo.thingList.filter(
       thingItem => thingItem.itemData.family.roomid === selectedRoomId
     )
-    if (Array.isArray(filterDevice)) {
-      return filterDevice
-    } else if (filterDevice !== undefined) {
-      result.push(filterDevice)
-    }
 
-    return result
+    return filterDevice
   }, [thingInfo, selectedRoomId])
 
   // 当前选择房间
