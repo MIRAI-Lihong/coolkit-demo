@@ -1,15 +1,13 @@
 import {getLongConnectionAPI} from '@/apis/general'
 import {getAppId, getNonce} from '@/utils/getEnv'
 
-import type {IMessageResponse} from '@/types/websocket'
+import type {
+  ActionMessageHandler,
+  IMessageResponse,
+  IPendingHandler
+} from '@/types/websocket'
 import type {IDeviceParams} from '@/types/device'
 import {accessTokenStorage, apiKeyStorage} from '@/utils/storage'
-
-type ActionMessageHandler = (data: IMessageResponse) => void
-interface IPendingHandler {
-  resolve: (value: IMessageResponse) => void
-  reject: (value: IMessageResponse) => void
-}
 
 function getAuth() {
   const at = accessTokenStorage.get()
@@ -20,15 +18,24 @@ function getAuth() {
 
 class Client {
   private ws: WebSocket | null = null
+  // 心跳计时器
   private heartbeatTimer: number | null = null
+  // 任务队列
   private pendingMap = new Map<string, IPendingHandler>()
+  // 监听器
   private listener = new Map<string, Set<ActionMessageHandler>>()
+  // 重连次数
+  private reconnectAttempts = 0
+  // 最大重连数
+  private maxReconnectAttempts = 5
+  // 重连间隔
+  private reconnectInterval = 10000
 
   constructor() {}
 
   // 建立连接
   async connect() {
-    if (this.ws) return
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) return
 
     const {at, apikey, appid} = getAuth()
 
@@ -44,6 +51,8 @@ class Client {
 
         // 连接成功回调
         this.ws.onopen = () => {
+          console.log('WebSocket 连接成功')
+          this.reconnectAttempts = 0
           // 握手
           this.handshake(at as string, apikey as string, appid)
         }
@@ -53,6 +62,17 @@ class Client {
           const data: IMessageResponse = JSON.parse(e.data)
           // 调用处理消息
           this.messageHandler(data)
+        }
+
+        // 错误回调
+        this.ws.onerror = e => {
+          console.error('WebSocket 连接出现错误', e)
+        }
+
+        // 关闭回调
+        this.ws.onclose = () => {
+          console.log('WebSocket 连接已经关闭')
+          this.reconnect()
         }
       }
     } catch (error) {
@@ -96,6 +116,20 @@ class Client {
     this.stopHeartbeat()
     this.ws?.close()
     this.ws = null
+  }
+
+  private reconnect() {
+    if (this.reconnectAttempts < this.maxReconnectAttempts) {
+      this.reconnectAttempts++
+      console.log(
+        `尝试重连... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`
+      )
+      setTimeout(() => {
+        this.connect()
+      }, this.reconnectInterval)
+    } else {
+      console.log('最大重连失败，终止重连')
+    }
   }
 
   // 查询设备信息
@@ -193,14 +227,10 @@ class Client {
     this.listener.get(event)?.delete(callback)
   }
 
-  // 消费
+  // 发布
   private emit(event: string, data: IMessageResponse) {
     // 取出回调进行消费
     this.listener.get(event)?.forEach(cb => cb(data))
-  }
-
-  reconnect() {
-    setTimeout(() => {})
   }
 }
 

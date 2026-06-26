@@ -19,3 +19,9 @@ export interface IMessageResponse {
   userAgent?: string
   sequence?: string
 }
+
+export type ActionMessageHandler = (data: IMessageResponse) => void
+export interface IPendingHandler {
+  resolve: (value: IMessageResponse) => void
+  reject: (value: IMessageResponse) => void
+}
