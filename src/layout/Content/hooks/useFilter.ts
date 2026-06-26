@@ -18,18 +18,19 @@ const useFilter = (deviceList: IThingItem[]) => {
 
   const onSearch: SearchProps['onSearch'] = value => {
     setQuery(value)
+    setPagination(prev => ({...prev, currentPage: 1}))
   }
 
   const onChange = useCallback((page: number, pageSize: number) => {
-    setPagination(prev => {
-      const next = Object.create(prev)
-      next.currentPage = page
-      next.pageSize = pageSize
-      return next
-    })
+    setPagination({currentPage: page, pageSize})
   }, [])
 
-  return {query, searchList, pagination, onSearch, onChange}
+  const resetFilter = useCallback(() => {
+    setQuery('')
+    setPagination({currentPage: 1, pageSize: 5})
+  }, [])
+
+  return {query, searchList, pagination, onSearch, onChange, resetFilter}
 }
 
 export default useFilter

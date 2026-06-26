@@ -13,12 +13,12 @@ interface IContentProps {
 }
 
 const Content = ({deviceList, room}: IContentProps) => {
-  const {query, searchList, pagination, onSearch, onChange} =
+  const {query, searchList, pagination, onSearch, onChange, resetFilter} =
     useFilter(deviceList)
 
   useEffect(() => {
-    onChange(1, 5)
-  }, [room, onChange])
+    resetFilter()
+  }, [room, resetFilter])
 
   const {currentPage, pageSize} = pagination
 
@@ -35,16 +35,17 @@ const Content = ({deviceList, room}: IContentProps) => {
       <div className={styles.utilContainer}>
         <Space>
           <Search
+            key={room}
             placeholder='搜索设备'
             allowClear
             onSearch={onSearch}
             style={{width: 200}}
           />
           <Pagination
+            current={currentPage}
+            pageSize={pageSize}
             total={shownList.length}
             showTotal={total => `共 ${total} 个设备`}
-            defaultPageSize={pageSize}
-            defaultCurrent={currentPage}
             showSizeChanger
             pageSizeOptions={[5, 10, 15, 20]}
             locale={{items_per_page: '个/页'}}

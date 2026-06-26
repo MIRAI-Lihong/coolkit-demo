@@ -1,32 +1,30 @@
-import {defineConfig} from 'vite'
+import {defineConfig, type ProxyOptions} from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
+
+const regionProxyMap = {
+  cn: 'https://cn-apia.coolkit.cn',
+  as: 'https://as-apia.coolkit.cc',
+  us: 'https://us-apia.coolkit.cc',
+  eu: 'https://eu-apia.coolkit.cc'
+}
+
+const generateProxyConfig = () => {
+  const proxyConfig: Record<string, ProxyOptions> = {}
+  Object.entries(regionProxyMap).forEach(([region, target]) => {
+    proxyConfig[`/${region}`] = {
+      target,
+      changeOrigin: true,
+      rewrite: (path: string) => path.replace(new RegExp(`^\\/${region}`), '')
+    }
+  })
+  return proxyConfig
+}
 
 export default defineConfig({
   plugins: [react()],
   server: {
-    proxy: {
-      '/cn': {
-        target: 'https://cn-apia.coolkit.cn',
-        changeOrigin: true,
-        rewrite: path => path.replace(/^\/cn/, '')
-      },
-      '/as': {
-        target: 'https://as-apia.coolkit.cc',
-        changeOrigin: true,
-        rewrite: path => path.replace(/^\/as/, '')
-      },
-      '/us': {
-        target: 'https://us-apia.coolkit.cc',
-        changeOrigin: true,
-        rewrite: path => path.replace(/^\/us/, '')
-      },
-      '/eu': {
-        target: 'https://eu-apia.coolkit.cc',
-        changeOrigin: true,
-        rewrite: path => path.replace(/^\/eu/, '')
-      }
-    }
+    proxy: generateProxyConfig()
   },
   resolve: {
     alias: {
