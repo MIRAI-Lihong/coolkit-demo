@@ -6,7 +6,6 @@ import Header from '@/layout/Header'
 import Content from '@/layout/Content'
 
 export default function Home() {
-  // 获取业务状态
   const {
     loading,
     currentFamily,
@@ -32,7 +31,7 @@ export default function Home() {
 
       <div className={styles.main}>
         <Header menu={currentSelectedMenu} />
-        <Content deviceList={filterDeviceList} />
+        <Content deviceList={filterDeviceList} room={selectedRoomId} />
       </div>
     </div>
   )

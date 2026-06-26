@@ -29,7 +29,10 @@ const DeviceCard = ({device}: IDeviceCardProps) => {
                 checked={sw.switch === 'on'}
                 onChange={checked => toggle(checked, sw.outlet)}
               />
-              <div className={styles.switchName} key={channelName[index].key}>
+              <div
+                className={styles.switchName}
+                key={channelName[index].value + channelName[index].key}
+              >
                 {channelName[index].value}
               </div>
             </div>

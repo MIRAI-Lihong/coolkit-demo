@@ -19,7 +19,9 @@ export function useHomeInfo() {
       // 家庭信息参数
       const param = {
         getFamily: {},
-        getThing: {}
+        getThing: {
+          num: 0
+        }
       }
       try {
         const res = await getHomeInfoAPI(param)

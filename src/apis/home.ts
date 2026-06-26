@@ -11,6 +11,7 @@ interface IHomeInfoRequest {
   getFamily: object
   getThing: {
     num?: number
+    beginIndex?: number
   }
 }
 
