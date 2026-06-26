@@ -1,32 +1,10 @@
-import {Button, message} from 'antd'
+import {Button} from 'antd'
 import styles from './index.module.less'
-import {useNavigate} from 'react-router-dom'
-import {accessTokenStorage, regionStorage} from '@/utils/storage'
-import {logoutAPI} from '@/apis/user'
+import useLogout from './hooks/useLogout'
 
 const Header = ({menu}: Record<string, string>) => {
-  const navigate = useNavigate()
-  // 跳转登录页
-  const jumpLogin = () => navigate('/login')
+  const {logOut} = useLogout()
 
-  const removeLocal = () => {
-    accessTokenStorage.remove()
-    regionStorage.remove()
-  }
-
-  const logOut = async () => {
-    try {
-      // 调用退出登录
-      await logoutAPI()
-      // 先把at region删除掉
-      removeLocal()
-      // 再跳转到登录页
-      jumpLogin()
-    } catch (error) {
-      console.error(error)
-      message.error('退出登录失败')
-    }
-  }
   return (
     <div className={styles.header}>
       <h1 className={styles.name}>第二周Demo</h1>

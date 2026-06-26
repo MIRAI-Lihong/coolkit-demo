@@ -1,7 +1,7 @@
 import CryptoJS from 'crypto-js'
-import type {ILoginAPI} from '../types/login'
+import type {ILoginAPI, IRefresh} from '../types/auth'
 
-export function createSign(appSecret: string, body: ILoginAPI) {
+export function createSign(appSecret: string, body: ILoginAPI | IRefresh) {
   const wordArray = CryptoJS.enc.Utf8.parse(JSON.stringify(body))
 
   // HMAC-SHA256

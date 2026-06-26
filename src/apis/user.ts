@@ -1,4 +1,4 @@
-import type {ILoginAPI, ILoginResponse} from '@/types/login'
+import type {ILoginAPI, ILoginResponse} from '@/types/auth'
 import {request} from '@/utils/request'
 
 export function loginAPI(data: ILoginAPI) {

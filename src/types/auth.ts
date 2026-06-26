@@ -12,3 +12,15 @@ export interface ILoginResponse {
   region: string
   user: IUserResponse
 }
+
+export interface IRefreshResponse {
+  data: {
+    at: string
+    rt: string
+  }
+  error: number
+}
+
+export interface IRefresh {
+  rt: string
+}

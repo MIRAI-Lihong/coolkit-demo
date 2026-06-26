@@ -2,9 +2,10 @@
 import axios from 'axios'
 import {createSign} from './encryption'
 import {getAppId, getAppSecret, getNonce} from './getEnv'
-import {accessTokenStorage, regionStorage} from './storage'
+import {accessTokenStorage, regionStorage, removeAll} from './storage'
 import {regionMap} from '@/configs/region'
 import {refresh} from './refresh'
+import {message} from 'antd'
 
 const request = axios.create({
   baseURL: '/us',
@@ -47,8 +48,13 @@ request.interceptors.request.use(
 // 响应拦截器
 request.interceptors.response.use(
   async response => {
-    // 当响应 401 时 调用刷新at的接口
     if (response.data?.error === 401) {
+      message.error('账号已在别处登录，请重新登录')
+      removeAll()
+      window.location.href = '/login'
+    }
+    // 当响应 402 时 调用刷新at的接口
+    if (response.data?.error === 402) {
       await refresh()
     }
     return response

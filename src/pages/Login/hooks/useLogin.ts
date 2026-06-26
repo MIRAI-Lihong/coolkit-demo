@@ -2,7 +2,7 @@ import {useMemo, useState} from 'react'
 import {useNavigate} from 'react-router-dom'
 import {message} from 'antd'
 import {loginAPI} from '@/apis/user'
-import type {ILoginAPI} from '@/types/login'
+import type {ILoginAPI} from '@/types/auth'
 
 import {areaCodes} from '../data'
 import {
@@ -63,6 +63,7 @@ export function useLogin() {
       const res = await loginAPI(params)
       const data = res.data
 
+      // 成功状态
       if (data.error === 0) {
         const {
           at,
