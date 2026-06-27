@@ -1,7 +1,7 @@
 // axios封装处理
 import axios from 'axios'
 import {createSign} from './encryption'
-import {getAppId, getAppSecret, getNonce} from './getEnv'
+import {getAppId, getNonce} from './getEnv'
 import {accessTokenStorage, regionStorage, removeAll} from './storage'
 import {regionMap} from '@/configs/region'
 import {refresh} from './refresh'
@@ -30,8 +30,7 @@ request.interceptors.request.use(
     // 如果是登录接口，需要计算sign
     if (config.url === '/v2/user/login') {
       const {data: body} = config
-      const appSecret = getAppSecret()
-      const sign = createSign(appSecret, body)
+      const sign = createSign(body)
       config.headers.Authorization = `Sign ${sign}`
     } else {
       // 不是登录接口，直接从本地获取到at
