@@ -91,7 +91,7 @@ class Client {
       apikey,
       appid,
       nonce: getNonce(),
-      sequence: Date.now().toString()
+      sequence: Date.now().toString() // ms
     }
     // 发送握手信息
     this.send(data)
