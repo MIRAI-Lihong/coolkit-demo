@@ -1,5 +1,5 @@
 import {wsDomain} from '@/configs/region'
-import type {IDispatchResponse} from '@/types/websocket'
+import type {IDispatchResponse} from '@/types/wss'
 import {regionStorage} from '@/utils/storage'
 import axios from 'axios'
 

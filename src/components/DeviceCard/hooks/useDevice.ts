@@ -1,5 +1,5 @@
 import type {IThingItem} from '@/types/device'
-import type {IMessageResponse} from '@/types/websocket'
+import type {IAppMsgResponse, IDeviceMsgResponse} from '@/types/wss'
 import {client} from '@/websocket/client'
 import {message} from 'antd'
 import {useState, useEffect, useMemo} from 'react'
@@ -7,6 +7,7 @@ import {useState, useEffect, useMemo} from 'react'
 const useDevice = (device: IThingItem) => {
   const deviceid = device?.itemData.deviceid
   const [switches, setSwitches] = useState(device.itemData.params.switches)
+  console.log(switches)
   const [switchLoadingMap, setSwitchLoadingMap] = useState<
     Map<number, boolean>
   >(new Map())
@@ -39,7 +40,7 @@ const useDevice = (device: IThingItem) => {
     try {
       // 调用ws的update方法更新数据 和查询数据逻辑类似
       const res = await client.update(deviceid, params)
-      if (res.error === 0) {
+      if (res.deviceid === deviceid) {
         // 更新ui
         setSwitches(newSwitches)
       }
@@ -63,25 +64,8 @@ const useDevice = (device: IThingItem) => {
   }, [device])
 
   useEffect(() => {
-    async function fetchSwitch(deviceid: string) {
-      try {
-        // ws查询开关 ws 下发后接受数据
-        const res = await client.query(deviceid, ['switches'])
-        // 拿到新的数据后，更新state，同步ui
-        const newSwitches = res?.params?.switches
-        if (newSwitches && newSwitches.length > 0) {
-          setSwitches(newSwitches)
-        }
-      } catch (error) {
-        console.error(error)
-      }
-    }
-    fetchSwitch(deviceid)
-  }, [deviceid])
-
-  useEffect(() => {
     // 设备更新回调
-    function updateSwitch(data: IMessageResponse) {
+    function updateSwitch(data: IAppMsgResponse | IDeviceMsgResponse) {
       // 更新state，同步ui
       const newSwitches = data?.params?.switches
       if (newSwitches && newSwitches.length > 0) {

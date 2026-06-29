@@ -1,13 +1,20 @@
 import {getLongConnectionAPI} from '@/apis/general'
 import {getAppId, getNonce} from '@/utils/getEnv'
 
-import type {
-  ActionMessageHandler,
-  IMessageResponse,
-  IPendingHandler
-} from '@/types/websocket'
+import {
+  MessageAction,
+  UserAgent,
+  type ActionMessageHandler,
+  type IAppMsgResponse,
+  type IDeviceMsgResponse,
+  type IMsgResponse,
+  type IPendingHandler,
+  type IUpdateMsgRequest,
+  type IUpdateMsgResponse
+} from '@/types/wss'
 import type {IDeviceParams} from '@/types/device'
 import {accessTokenStorage, apiKeyStorage} from '@/utils/storage'
+import {isAppMsg, isDeviceMsg, isShakeMsg, isUpdateMsg} from '@/utils/typeGuard'
 
 function getAuth() {
   const at = accessTokenStorage.get()
@@ -61,7 +68,10 @@ class Client {
 
         // 握手成功回调
         this.ws.onmessage = e => {
-          const data: IMessageResponse = JSON.parse(e.data)
+          // 如果是心脏回调，不需要处理
+          if (e.data === 'pong') return
+
+          const data: IMsgResponse = JSON.parse(e.data)
           // 调用处理消息
           this.messageHandler(data)
         }
@@ -103,18 +113,22 @@ class Client {
   }
 
   // 消息处理
-  private messageHandler(data: IMessageResponse) {
-    if (data.action) {
-      // 更新设备回调 当app和设备更新后，会走此回调
+  private messageHandler(data: IMsgResponse) {
+    if (isDeviceMsg(data) || isAppMsg(data)) {
+      // 设备更新回调
       this.actionHandler(data)
       return
-    } else if (data.config) {
-      // userOnline 信息处理 开启心跳
+    }
+    if (isShakeMsg(data)) {
+      // 握手回调
       this.startHeartbeat(data.config.hbInterval)
       return
     }
-    //  当主动查询和更新设备后，会走此回调
-    this.queryHandler(data)
+    if (isUpdateMsg(data)) {
+      // 网页主动更新回调
+      this.updateHandler(data)
+      return
+    }
   }
 
   // 取消连接
@@ -139,27 +153,24 @@ class Client {
     }
   }
 
-  // 查询设备信息
-  query(deviceid: string, params: string[] = []) {
-    const {apikey} = getAuth()
-    return this.request({
-      action: 'query',
-      deviceid,
-      apikey,
-      params, // 可以使用[]查询所有字段状态
-      userAgent: 'app'
-    })
-  }
-
   // 更新设备
   update(deviceid: string, params: IDeviceParams) {
     const {apikey} = getAuth()
+    const safeApiKey = apikey ?? ''
     return this.request({
-      action: 'update',
+      action: MessageAction.UPDATE,
       deviceid,
-      apikey,
-      params,
-      userAgent: 'app'
+      apikey: safeApiKey,
+      params: {
+        switches: [
+          {outlet: 0, switch: 'on'},
+          {outlet: 1, switch: 'on'},
+          {switch: 'on', outlet: 2},
+          {switch: 'on', outlet: 3},
+          {outlet: 0, switch: 'on'}
+        ]
+      },
+      userAgent: UserAgent.APP
     })
   }
 
@@ -170,7 +181,7 @@ class Client {
     const newHbInterval = hbInterval * (0.8 + Math.random() * 0.2) * 1000
     // 开启心跳定时
     this.heartbeatTimer = setInterval(() => {
-      this.send('ping')
+      this?.ws?.send('ping')
     }, newHbInterval)
   }
 
@@ -188,8 +199,8 @@ class Client {
   }
 
   // 将消息的返回结果封装成一个Promise
-  private request<T>(data: T) {
-    return new Promise<IMessageResponse>((resolve, reject) => {
+  private request(data: IUpdateMsgRequest) {
+    return new Promise<IUpdateMsgResponse>((resolve, reject) => {
       // 时间戳，通过时间戳来表示同一次操作
       const sequence = Date.now().toString()
 
@@ -205,13 +216,13 @@ class Client {
   }
 
   // 设备更新处理
-  private actionHandler(data: IMessageResponse) {
+  private actionHandler(data: IAppMsgResponse | IDeviceMsgResponse) {
     // 设备 update 消息回调 将数据传给回调函数
     this.emit('device_update', data)
   }
 
-  // 查询数据处理
-  private queryHandler(data: IMessageResponse) {
+  // 网页主动更新处理
+  private updateHandler(data: IUpdateMsgResponse) {
     // 当ws服务器下发查询数据后，找到之前存取的任务
     const task = this.pendingMap.get(data.sequence as string)
     if (!task) return
@@ -222,7 +233,10 @@ class Client {
   }
 
   // 监听任务 存储回调
-  on(event: string, callback: (data: IMessageResponse) => void) {
+  on(
+    event: string,
+    callback: (data: IAppMsgResponse | IDeviceMsgResponse) => void
+  ) {
     if (!this.listener.get(event)) {
       // 第一次存 设置空Set
       this.listener.set(event, new Set())
@@ -231,12 +245,15 @@ class Client {
   }
 
   // 关闭监听 删除回调
-  off(event: string, callback: (data: IMessageResponse) => void) {
+  off(
+    event: string,
+    callback: (data: IAppMsgResponse | IDeviceMsgResponse) => void
+  ) {
     this.listener.get(event)?.delete(callback)
   }
 
   // 发布
-  private emit(event: string, data: IMessageResponse) {
+  private emit(event: string, data: IAppMsgResponse | IDeviceMsgResponse) {
     // 取出回调进行消费
     this.listener.get(event)?.forEach(cb => cb(data))
   }

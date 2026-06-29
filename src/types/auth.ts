@@ -25,6 +25,10 @@ export interface IRefresh {
   rt: string
 }
 
+export interface IGetRegion {
+  countryCode: string
+}
+
 export interface IRegionResponse {
   data: {
     region: string
