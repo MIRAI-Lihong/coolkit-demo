@@ -6,6 +6,7 @@ interface ILoadingProps {
   description: string
 }
 
+// 首页加载loading
 const index = ({description}: ILoadingProps) => {
   const contentStyle: React.CSSProperties = {
     minWidth: 300

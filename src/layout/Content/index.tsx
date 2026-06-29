@@ -17,16 +17,19 @@ const Content = ({deviceList, room}: IContentProps) => {
     useFilter(deviceList)
 
   useEffect(() => {
+    // 切换房间触发重置
     resetFilter()
   }, [room, resetFilter])
 
   const {currentPage, pageSize} = pagination
 
+  // 通过是否有搜索关键词表示是否在搜索
   const hasQuery = query.trim().length > 0
   const shownList = searchList ?? deviceList
   // const shownList = new Array(50).fill(shownList[0])
 
   if (deviceList.length === 0) {
+    // 没有设备展示的空状态
     return <ContentEmpty type='room' />
   }
 

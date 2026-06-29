@@ -7,9 +7,11 @@ interface IDeviceListProps {
   page: number
   pageSize: number
 }
-
+// 设备展示
 const DeviceList = ({deviceList, page, pageSize}: IDeviceListProps) => {
+  // 计算beginIndex
   const beginIndex = (page - 1) * pageSize
+  // 计算endIndex 处理边界情况
   const endIndex = Math.min(beginIndex + pageSize, deviceList.length)
   const shownList = deviceList.slice(beginIndex, endIndex)
 
