@@ -2,7 +2,7 @@ import {useMemo, useState} from 'react'
 import {useNavigate} from 'react-router-dom'
 import {message} from 'antd'
 import {loginAPI} from '@/apis/user'
-import type {ILoginAPI} from '@/types/auth'
+import type {IGetRegion, ILoginAPI} from '@/types/auth'
 
 import {areaCodes} from '../data'
 import {
@@ -12,6 +12,9 @@ import {
   regionStorage
 } from '@/utils/storage'
 import {client} from '@/websocket/client'
+import {getRegionAPI} from '@/apis/refresh'
+import {createSign, getAndDelMsg} from '@/utils/encryption'
+import {getAppId, getNonce} from '@/utils/getEnv'
 
 interface LoginFormValues {
   phoneNumber: string
@@ -47,9 +50,34 @@ export function useLogin() {
     refreshTokenStorage.set(rt)
   }
 
+  // 调用接口获取region
+  const handleGetRegion = async (data: IGetRegion) => {
+    const msg = getAndDelMsg(data)
+    const sign = createSign(msg)
+    const config = {
+      baseURL: '/all',
+      headers: {
+        'X-CK-Appid': getAppId(),
+        Authorization: `Sign ${sign}`,
+        'Content-Type': 'application/json',
+        'X-CK-Nonce': getNonce()
+      }
+    }
+    return await getRegionAPI(data, config)
+  }
+
   // 登录逻辑
   const handleLogin = async (formValues: LoginFormValues) => {
     const {phoneNumber, password, countryCode} = formValues
+
+    const replaceCountryCode = countryCode.replace('+', '')
+    // 先获取到region
+    const r = await handleGetRegion({countryCode: replaceCountryCode})
+    if (!r.data.data.region) return
+
+    // 获取到了存入 regionStorage
+    regionStorage.set(r.data.data.region)
+
     // 电话格式 +8615390228021
     const splicingPhone = countryCode + phoneNumber
     const params: ILoginAPI = {

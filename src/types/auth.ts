@@ -24,3 +24,9 @@ export interface IRefreshResponse {
 export interface IRefresh {
   rt: string
 }
+
+export interface IRegionResponse {
+  data: {
+    region: string
+  }
+}

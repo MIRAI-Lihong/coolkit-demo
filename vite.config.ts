@@ -6,7 +6,8 @@ const regionProxyMap = {
   cn: 'https://cn-apia.coolkit.cn',
   as: 'https://as-apia.coolkit.cc',
   us: 'https://us-apia.coolkit.cc',
-  eu: 'https://eu-apia.coolkit.cc'
+  eu: 'https://eu-apia.coolkit.cc',
+  all: 'https://apia.coolkit.cn'
 }
 
 const generateProxyConfig = () => {

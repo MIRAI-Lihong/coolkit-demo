@@ -8,7 +8,6 @@ import {refresh} from './refresh'
 import {message} from 'antd'
 
 const request = axios.create({
-  baseURL: '/us',
   timeout: 30000
 })
 
