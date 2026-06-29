@@ -17,9 +17,11 @@ import {createSign, getAndDelMsg} from '@/utils/encryption'
 import {getAppId, getNonce} from '@/utils/getEnv'
 
 interface LoginFormValues {
-  phoneNumber: string
+  phoneNumber?: string
+  email?: string
   password: string
   countryCode: string
+  loginType: 'phone' | 'email'
 }
 
 // 错误码
@@ -68,7 +70,7 @@ export function useLogin() {
 
   // 登录逻辑
   const handleLogin = async (formValues: LoginFormValues) => {
-    const {phoneNumber, password, countryCode} = formValues
+    const {phoneNumber, email, password, countryCode, loginType} = formValues
 
     const replaceCountryCode = countryCode.replace('+', '')
     // 先获取到region
@@ -78,12 +80,16 @@ export function useLogin() {
     // 获取到了存入 regionStorage
     regionStorage.set(r.data.data.region)
 
-    // 电话格式 +8615390228021
-    const splicingPhone = countryCode + phoneNumber
     const params: ILoginAPI = {
       password,
-      phoneNumber: splicingPhone,
       countryCode
+    }
+
+    if (loginType === 'phone' && phoneNumber) {
+      // 电话格式 +8615390228021
+      params.phoneNumber = countryCode + phoneNumber
+    } else if (loginType === 'email' && email) {
+      params.email = email
     }
 
     try {
