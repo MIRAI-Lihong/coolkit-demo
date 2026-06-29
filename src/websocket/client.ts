@@ -30,6 +30,8 @@ class Client {
   private maxReconnectAttempts = 5
   // 重连间隔
   private reconnectInterval = 10000
+  // 确定关闭
+  private sureClose = false
 
   constructor() {}
 
@@ -72,7 +74,10 @@ class Client {
         // 关闭回调
         this.ws.onclose = () => {
           console.log('WebSocket 连接已经关闭')
-          this.reconnect()
+          // 没有确定关闭才重连
+          if (!this.sureClose) {
+            this.reconnect()
+          }
         }
       }
     } catch (error) {
@@ -100,6 +105,7 @@ class Client {
   // 消息处理
   private messageHandler(data: IMessageResponse) {
     if (data.action) {
+      // 更新设备回调 当app和设备更新后，会走此回调
       this.actionHandler(data)
       return
     } else if (data.config) {
@@ -107,13 +113,14 @@ class Client {
       this.startHeartbeat(data.config.hbInterval)
       return
     }
-    // 查询消息处理
+    //  当主动查询和更新设备后，会走此回调
     this.queryHandler(data)
   }
 
   // 取消连接
   disconnect() {
     this.stopHeartbeat()
+    this.sureClose = true
     this.ws?.close()
     this.ws = null
   }
@@ -217,6 +224,7 @@ class Client {
   // 监听任务 存储回调
   on(event: string, callback: (data: IMessageResponse) => void) {
     if (!this.listener.get(event)) {
+      // 第一次存 设置空Set
       this.listener.set(event, new Set())
     }
     this.listener.get(event)?.add(callback)
