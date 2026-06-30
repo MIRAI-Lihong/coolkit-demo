@@ -10,8 +10,8 @@ export interface IHomeInfoResponse {
 interface IHomeInfoRequest {
   getFamily: object
   getThing: {
-    num?: number
-    beginIndex?: number
+    num?: number // 每页数量
+    beginIndex?: number // 开始索引 默认是从-9999999开始
   }
 }
 

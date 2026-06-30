@@ -42,4 +42,5 @@ export interface IThingItem {
 
 export interface IThingListResponse {
   thingList: IThingItem[]
+  total: number
 }

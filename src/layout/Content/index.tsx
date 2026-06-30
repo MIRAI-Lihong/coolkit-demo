@@ -10,10 +10,14 @@ import {useEffect} from 'react'
 interface IContentProps {
   deviceList: IThingItem[]
   room: string
+  total: number
+  currentPage: number
+  pageSize: number
+  onPageChange: (page: number, size: number) => void
 }
 
-const Content = ({deviceList, room}: IContentProps) => {
-  const {query, searchList, pagination, onSearch, onChange, resetFilter} =
+const Content = ({deviceList, room, total, currentPage, pageSize, onPageChange}: IContentProps) => {
+  const {query, searchList, onSearch, resetFilter} =
     useFilter(deviceList)
 
   useEffect(() => {
@@ -21,14 +25,11 @@ const Content = ({deviceList, room}: IContentProps) => {
     resetFilter()
   }, [room, resetFilter])
 
-  const {currentPage, pageSize} = pagination
-
   // 通过是否有搜索关键词表示是否在搜索
   const hasQuery = query.trim().length > 0
   const shownList = searchList ?? deviceList
-  // const shownList = new Array(50).fill(shownList[0])
 
-  if (deviceList.length === 0) {
+  if (total === 0) {
     // 没有设备展示的空状态
     return <ContentEmpty type='room' />
   }
@@ -47,23 +48,23 @@ const Content = ({deviceList, room}: IContentProps) => {
           <Pagination
             current={currentPage}
             pageSize={pageSize}
-            total={shownList.length}
-            showTotal={total => `共 ${total} 个设备`}
+            total={hasQuery ? shownList.length : total}
+            showTotal={t => `共 ${t} 个设备`}
             showSizeChanger
             pageSizeOptions={[5, 10, 15, 20]}
             locale={{items_per_page: '个/页'}}
-            onChange={(page, pageSize) => onChange(page, pageSize)}
+            onChange={onPageChange}
           />
         </Space>
       </div>
 
-      {hasQuery && shownList.length === 0 ? (
+      {shownList.length === 0 ? (
         <ContentEmpty type='search' />
       ) : (
         <DeviceList
           deviceList={shownList}
-          page={currentPage}
-          pageSize={pageSize}
+          page={1}
+          pageSize={shownList.length}
         />
       )}
     </div>

@@ -1,4 +1,4 @@
-import {useState, useEffect, useMemo} from 'react'
+import {useState, useEffect, useMemo, useCallback, useRef} from 'react'
 import {getHomeInfoAPI} from '@/apis/home'
 import type {IFamilyListResponse} from '@/types/family'
 import type {IThingItem, IThingListResponse} from '@/types/device'
@@ -12,31 +12,65 @@ export function useHomeInfo() {
   // 左侧侧边栏选择的房间
   const [selectedRoomId, setSelectedRoomId] = useState<string>('')
 
+  // 分页状态
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(5)
+  // 第一页默认 -9999999
+  const beginIndexMapRef = useRef<Record<number, number>>({1: -9999999})
+
   useEffect(() => {
-    // 获取家庭信息
-    const fetchHomeInfo = async () => {
+    let currentRequest = true
+
+    const doFetch = async () => {
       setLoading(true)
-      // 家庭信息参数
+      const beginIndex = beginIndexMapRef.current[currentPage] ?? -9999999
       const param = {
         getFamily: {},
         getThing: {
-          num: 0
+          num: pageSize,
+          beginIndex
         }
       }
       try {
         const res = await getHomeInfoAPI(param)
-        const {data} = res.data
-        if (data.familyInfo) setFamilyInfo(data.familyInfo)
-        if (data.thingInfo) setThingInfo(data.thingInfo)
+        if (currentRequest) {
+          const {data} = res.data
+          if (data.familyInfo) setFamilyInfo(data.familyInfo)
+          if (data.thingInfo) {
+            setThingInfo(data.thingInfo)
+            const list = data.thingInfo.thingList
+            if (list && list.length > 0) {
+              const nextBeginIndex = list[list.length - 1].index + 1
+              beginIndexMapRef.current[currentPage + 1] = nextBeginIndex
+            }
+          }
+        }
       } catch (error) {
-        console.error('获取信息失败', error)
+        if (currentRequest) console.error('获取信息失败', error)
       } finally {
-        setLoading(false)
+        if (currentRequest) setLoading(false)
       }
     }
 
-    fetchHomeInfo()
-  }, [])
+    doFetch()
+
+    return () => {
+      currentRequest = false
+    }
+  }, [currentPage, pageSize])
+
+  const onPageChange = useCallback(
+    (page: number, size: number) => {
+      if (size !== pageSize) {
+        beginIndexMapRef.current = {1: -9999999}
+        setPageSize(size)
+        setCurrentPage(1)
+      } else {
+        setCurrentPage(page)
+      }
+    },
+    [pageSize]
+  )
 
   // 当前家庭
   const currentFamily = useMemo(() => {
@@ -82,6 +116,9 @@ export function useHomeInfo() {
     selectedRoomId,
     filterDeviceList,
     currentSelectedMenu,
-    setSelectedRoomId
+    setSelectedRoomId,
+    currentPage,
+    pageSize,
+    onPageChange
   }
 }

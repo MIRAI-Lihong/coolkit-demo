@@ -13,7 +13,11 @@ export default function Home() {
     selectedRoomId,
     setSelectedRoomId,
     filterDeviceList,
-    currentSelectedMenu
+    currentSelectedMenu,
+    thingInfo,
+    currentPage,
+    pageSize,
+    onPageChange
   } = useHomeInfo()
 
   const SiderProps = {
@@ -23,7 +27,7 @@ export default function Home() {
     setSelectedRoomId
   }
 
-  if (loading) return <Loading description='正在加载家庭信息' />
+  if (loading && !thingInfo) return <Loading description='正在加载家庭信息' />
 
   return (
     <div className={styles.layout}>
@@ -31,7 +35,14 @@ export default function Home() {
 
       <div className={styles.main}>
         <Header menu={currentSelectedMenu} />
-        <Content deviceList={filterDeviceList} room={selectedRoomId} />
+        <Content 
+          deviceList={filterDeviceList} 
+          room={selectedRoomId} 
+          total={thingInfo?.total || 0}
+          currentPage={currentPage}
+          pageSize={pageSize}
+          onPageChange={onPageChange}
+        />
       </div>
     </div>
   )
