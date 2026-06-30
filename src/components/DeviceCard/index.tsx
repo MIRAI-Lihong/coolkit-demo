@@ -8,7 +8,8 @@ interface IDeviceCardProps {
 }
 
 const DeviceCard = ({device}: IDeviceCardProps) => {
-  const {switches, toggle, switchLoadingMap, channelName} = useDevice(device)
+  const {switches, toggle, switchLoadingMap, channelName, online} =
+    useDevice(device)
   return (
     <Card key={device.itemData.deviceid}>
       <div className={styles.deviceContainer}>
@@ -16,8 +17,8 @@ const DeviceCard = ({device}: IDeviceCardProps) => {
           <div className={styles.deviceName}>{device.itemData.name}</div>
           {/* 展示是否在线 */}
           <Badge
-            status={device.itemData.online ? 'success' : 'default'}
-            text={device.itemData.online ? '在线' : '离线'}
+            status={online ? 'success' : 'default'}
+            text={online ? '在线' : '离线'}
           />
         </div>
         <div className={styles.deviceFoot}>

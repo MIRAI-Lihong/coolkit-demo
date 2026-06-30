@@ -1,5 +1,11 @@
 import type {IThingItem} from '@/types/device'
-import type {IAppMsgResponse, IDeviceMsgResponse} from '@/types/wss'
+import type {
+  IAppMsgResponse,
+  IDeviceInitMsgResponse,
+  IDeviceMsgResponse,
+  IErrorMsgResponse,
+  IOnlineMsgResponse
+} from '@/types/wss'
 import {client} from '@/websocket/client'
 import {message} from 'antd'
 import {useState, useEffect, useMemo} from 'react'
@@ -7,6 +13,7 @@ import {useState, useEffect, useMemo} from 'react'
 const useDevice = (device: IThingItem) => {
   const deviceid = device?.itemData.deviceid
   const [switches, setSwitches] = useState(device.itemData.params.switches)
+  const [online, setOnline] = useState(device.itemData.online)
   const [switchLoadingMap, setSwitchLoadingMap] = useState<
     Map<number, boolean>
   >(new Map())
@@ -22,14 +29,10 @@ const useDevice = (device: IThingItem) => {
 
   // 开关切换处理
   const toggle = async (checked: boolean, outlet: number) => {
-    setLoading(outlet, true)
     // 计算新的开关数据
-    const newSwitches = [...switches]
-    newSwitches.map(sw => {
-      if (sw.outlet === outlet) {
-        sw.switch = checked ? 'on' : 'off'
-      }
-    })
+    const newSwitches = switches.map(sw =>
+      sw.outlet === outlet ? {...sw, switch: checked ? 'on' : 'off'} : sw
+    )
 
     // 处理参数
     const params = {
@@ -37,16 +40,21 @@ const useDevice = (device: IThingItem) => {
     }
 
     try {
-      // 调用ws的update方法更新数据 和查询数据逻辑类似
+      setLoading(outlet, true)
+      // 调用ws的update方法更新数据
       const res = await client.update(deviceid, params)
-      if (res.deviceid === deviceid) {
-        // 更新ui
-        setSwitches(newSwitches)
-      }
-      setLoading(outlet, false)
+      if (res.deviceid !== deviceid) return
+      // 更新ui
+      setSwitches(newSwitches)
     } catch (error) {
       console.error(error)
+      if ((error as IErrorMsgResponse).error === 504) {
+        message.error('更新超时')
+        return
+      }
       message.error('设备控制失败')
+    } finally {
+      setLoading(outlet, false)
     }
   }
 
@@ -70,18 +78,47 @@ const useDevice = (device: IThingItem) => {
         setSwitches(newSwitches)
       }
     }
-    // 开启设备更新的监听
-    client.on('device_update', updateSwitch)
-    return () => {
-      client.off('device_update', updateSwitch)
+
+    // 设备上线或者离线回调
+    function onlineAndOffline(data: IOnlineMsgResponse) {
+      const status = data.params.online
+      setOnline(status)
+      if (status) {
+        // 设备上线
+        message.info('设备已上线')
+      } else {
+        // 设备下线
+        console.log('设备已下线')
+        setSwitches([])
+      }
     }
-  }, [])
+
+    // 设备更新回调
+    function deviceInit(data: IDeviceInitMsgResponse) {
+      const d_seq = data.d_seq
+      if (d_seq) {
+        message.success('正在同步信息')
+      }
+    }
+
+    client.on(`device_update:${deviceid}`, updateSwitch)
+    client.on(`device_online${deviceid}`, onlineAndOffline)
+    client.on(`device_offline${deviceid}`, onlineAndOffline)
+    client.on(`device_init${deviceid}`, deviceInit)
+    return () => {
+      client.off(`device_update:${deviceid}`, updateSwitch)
+      client.off(`device_online${deviceid}`, onlineAndOffline)
+      client.off(`device_offline${deviceid}`, onlineAndOffline)
+      client.off(`device_init${deviceid}`, deviceInit)
+    }
+  }, [deviceid])
 
   return {
     switches,
     toggle,
     switchLoadingMap,
-    channelName
+    channelName,
+    online
   }
 }
 

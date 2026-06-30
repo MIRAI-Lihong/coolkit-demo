@@ -6,15 +6,26 @@ import {
   UserAgent,
   type ActionMessageHandler,
   type IAppMsgResponse,
+  type IDeviceInitMsgResponse,
   type IDeviceMsgResponse,
+  type IErrorMsgResponse,
   type IMsgResponse,
+  type IOnlineMsgResponse,
   type IPendingHandler,
   type IUpdateMsgRequest,
   type IUpdateMsgResponse
 } from '@/types/wss'
 import type {IDeviceParams} from '@/types/device'
 import {accessTokenStorage, apiKeyStorage} from '@/utils/storage'
-import {isAppMsg, isDeviceMsg, isShakeMsg, isUpdateMsg} from '@/utils/typeGuard'
+import {
+  isAppMsg,
+  isDeviceInitMsg,
+  isDeviceMsg,
+  isOnlineMsg,
+  isShakeMsg,
+  isTimeOutMsg,
+  isUpdateMsg
+} from '@/utils/typeGuard'
 
 function getAuth() {
   const at = accessTokenStorage.get()
@@ -115,20 +126,48 @@ class Client {
   // 消息处理
   private messageHandler(data: IMsgResponse) {
     if (isDeviceMsg(data) || isAppMsg(data)) {
-      // 设备更新回调
+      // 设备更新处理
       this.actionHandler(data)
       return
     }
     if (isShakeMsg(data)) {
-      // 握手回调
+      // 握手处理
       this.startHeartbeat(data.config.hbInterval)
       return
     }
     if (isUpdateMsg(data)) {
-      // 网页主动更新回调
+      // 网页主动更新处理
       this.updateHandler(data)
       return
     }
+
+    if (isOnlineMsg(data)) {
+      // 设备上线\下线处理
+      this.onlineOfflineHandler(data)
+      return
+    }
+
+    if (isDeviceInitMsg(data)) {
+      this.deviceInitHandler(data)
+      return
+    }
+    if (isTimeOutMsg(data)) {
+      // 超时处理
+      this.timeOutHandler(data)
+      return
+    }
+  }
+
+  // 超时处理函数
+  private timeOutHandler(data: IErrorMsgResponse) {
+    if (data.error !== 504) return
+    const sequence = data.sequence
+    // 取出对应的请求
+    const task = this.pendingMap.get(sequence)
+    if (!task) return
+    task.reject(data)
+    // 当前任务执行完成，直接删除
+    this.pendingMap.delete(sequence)
   }
 
   // 取消连接
@@ -139,6 +178,7 @@ class Client {
     this.ws = null
   }
 
+  // 重连
   private reconnect() {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++
@@ -161,15 +201,7 @@ class Client {
       action: MessageAction.UPDATE,
       deviceid,
       apikey: safeApiKey,
-      params: {
-        switches: [
-          {outlet: 0, switch: 'on'},
-          {outlet: 1, switch: 'on'},
-          {switch: 'on', outlet: 2},
-          {switch: 'on', outlet: 3},
-          {outlet: 0, switch: 'on'}
-        ]
-      },
+      params,
       userAgent: UserAgent.APP
     })
   }
@@ -217,8 +249,27 @@ class Client {
 
   // 设备更新处理
   private actionHandler(data: IAppMsgResponse | IDeviceMsgResponse) {
+    const deviceid = data.deviceid
     // 设备 update 消息回调 将数据传给回调函数
-    this.emit('device_update', data)
+    this.emit(`device_update:${deviceid}`, data)
+  }
+
+  // 设备上线\离线处理
+  private onlineOfflineHandler(data: IOnlineMsgResponse) {
+    const deviceid = data.deviceid
+    if (data.params.online) {
+      // 设备上线
+      this.emit(`device_online${deviceid}`, data)
+    } else {
+      // 设备下线
+      this.emit(`device_offline${deviceid}`, data)
+    }
+  }
+
+  // 设备联网初始化处理
+  private deviceInitHandler(data: IDeviceInitMsgResponse) {
+    const deviceid = data.deviceid
+    this.emit(`device_init:${deviceid}`, data)
   }
 
   // 网页主动更新处理
@@ -235,7 +286,13 @@ class Client {
   // 监听任务 存储回调
   on(
     event: string,
-    callback: (data: IAppMsgResponse | IDeviceMsgResponse) => void
+    callback: (
+      data:
+        | IAppMsgResponse
+        | IDeviceMsgResponse
+        | IOnlineMsgResponse
+        | IDeviceInitMsgResponse
+    ) => void
   ) {
     if (!this.listener.get(event)) {
       // 第一次存 设置空Set
@@ -247,13 +304,26 @@ class Client {
   // 关闭监听 删除回调
   off(
     event: string,
-    callback: (data: IAppMsgResponse | IDeviceMsgResponse) => void
+    callback: (
+      data:
+        | IAppMsgResponse
+        | IDeviceMsgResponse
+        | IOnlineMsgResponse
+        | IDeviceInitMsgResponse
+    ) => void
   ) {
     this.listener.get(event)?.delete(callback)
   }
 
   // 发布
-  private emit(event: string, data: IAppMsgResponse | IDeviceMsgResponse) {
+  private emit(
+    event: string,
+    data:
+      | IAppMsgResponse
+      | IDeviceMsgResponse
+      | IOnlineMsgResponse
+      | IDeviceInitMsgResponse
+  ) {
     // 取出回调进行消费
     this.listener.get(event)?.forEach(cb => cb(data))
   }
