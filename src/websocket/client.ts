@@ -43,7 +43,10 @@ class Client {
   // 任务队列
   private pendingMap = new Map<string, IPendingHandler>()
   // 监听器
-  private listener = new Map<string, Set<ActionMessageHandler<any>>>()
+  private listener = new Map<
+    string,
+    Set<ActionMessageHandler<ListenResponse>>
+  >()
   // 重连次数
   private reconnectAttempts = 0
   // 最大重连数
@@ -303,12 +306,16 @@ class Client {
       // 第一次存 设置空Set
       this.listener.set(event, new Set())
     }
-    this.listener.get(event)?.add(callback)
+    this.listener
+      .get(event)
+      ?.add(callback as ActionMessageHandler<ListenResponse>)
   }
 
   // 关闭监听 删除回调
   off<T extends ListenResponse>(event: string, callback: (data: T) => void) {
-    this.listener.get(event)?.delete(callback)
+    this.listener
+      .get(event)
+      ?.delete(callback as ActionMessageHandler<ListenResponse>)
   }
 
   // 发布
