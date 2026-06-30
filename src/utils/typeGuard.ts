@@ -38,7 +38,7 @@ export function isShakeMsg(msg: IMsgResponse): msg is IShakeMsgResponse {
 
 // 判断是否为网页主动更新消息
 export function isUpdateMsg(msg: IMsgResponse): msg is IUpdateMsgResponse {
-  return 'uid' in msg
+  return 'error' in msg && msg.error === 0
 }
 
 // 判断设备是否为上线、离线消息
@@ -61,5 +61,10 @@ export function isDeviceInitMsg(
 
 // 判断是否为 504 超时信息
 export function isTimeOutMsg(msg: IMsgResponse): msg is IErrorMsgResponse {
-  return 'error' in msg && msg.error === 504
+  return 'error' in msg && msg.error === 504 && 'reason' in msg
+}
+
+// 判断是否为 400 超时信息
+export function isParamErrorMsg(msg: IMsgResponse): msg is IErrorMsgResponse {
+  return 'error' in msg && msg.error === 400
 }

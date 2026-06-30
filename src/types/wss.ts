@@ -75,7 +75,7 @@ export interface IDeviceInitMsgResponse {
 // 504 或者 400 错误提示
 export interface IErrorMsgResponse {
   error: ErrorCode
-  reason: string
+  reason?: string
   deviceid: string
   apikey: string
   sequence: string

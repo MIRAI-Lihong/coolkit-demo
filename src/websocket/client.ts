@@ -22,6 +22,7 @@ import {
   isDeviceInitMsg,
   isDeviceMsg,
   isOnlineMsg,
+  isParamErrorMsg,
   isShakeMsg,
   isTimeOutMsg,
   isUpdateMsg
@@ -125,16 +126,30 @@ class Client {
 
   // 消息处理
   private messageHandler(data: IMsgResponse) {
+    if (isParamErrorMsg(data)) {
+      // 参数错误
+      this.errorHandler(data)
+      return
+    }
+
+    if (isDeviceInitMsg(data)) {
+      // 设备联网初始化
+      this.deviceInitHandler(data)
+      return
+    }
+
     if (isDeviceMsg(data) || isAppMsg(data)) {
       // 设备更新处理
       this.actionHandler(data)
       return
     }
+
     if (isShakeMsg(data)) {
       // 握手处理
       this.startHeartbeat(data.config.hbInterval)
       return
     }
+
     if (isUpdateMsg(data)) {
       // 网页主动更新处理
       this.updateHandler(data)
@@ -147,20 +162,16 @@ class Client {
       return
     }
 
-    if (isDeviceInitMsg(data)) {
-      this.deviceInitHandler(data)
-      return
-    }
     if (isTimeOutMsg(data)) {
-      // 超时处理
-      this.timeOutHandler(data)
+      // 超时错误处理
+      this.errorHandler(data)
       return
     }
   }
 
-  // 超时处理函数
-  private timeOutHandler(data: IErrorMsgResponse) {
-    if (data.error !== 504) return
+  // 错误处理函数
+  private errorHandler(data: IErrorMsgResponse) {
+    if (data.error !== 504 && data.error !== 400) return
     const sequence = data.sequence
     // 取出对应的请求
     const task = this.pendingMap.get(sequence)
@@ -259,10 +270,10 @@ class Client {
     const deviceid = data.deviceid
     if (data.params.online) {
       // 设备上线
-      this.emit(`device_online${deviceid}`, data)
+      this.emit(`device_online:${deviceid}`, data)
     } else {
       // 设备下线
-      this.emit(`device_offline${deviceid}`, data)
+      this.emit(`device_offline:${deviceid}`, data)
     }
   }
 
@@ -275,12 +286,12 @@ class Client {
   // 网页主动更新处理
   private updateHandler(data: IUpdateMsgResponse) {
     // 当ws服务器下发查询数据后，找到之前存取的任务
-    const task = this.pendingMap.get(data.sequence as string)
+    const task = this.pendingMap.get(data.sequence)
     if (!task) return
     // 然后兑现Promise，将数据返回
     task.resolve(data)
     // 当前任务执行完成，直接删除
-    this.pendingMap.delete(data.sequence as string)
+    this.pendingMap.delete(data.sequence)
   }
 
   // 监听任务 存储回调

@@ -29,27 +29,36 @@ const useDevice = (device: IThingItem) => {
 
   // 开关切换处理
   const toggle = async (checked: boolean, outlet: number) => {
+    if (!online) return
     // 计算新的开关数据
-    const newSwitches = switches.map(sw =>
-      sw.outlet === outlet ? {...sw, switch: checked ? 'on' : 'off'} : sw
-    )
-
-    // 处理参数
     const params = {
-      switches: newSwitches
+      switches: [
+        {
+          switch: checked ? 'on' : 'off',
+          outlet
+        }
+      ]
     }
-
     try {
       setLoading(outlet, true)
+
       // 调用ws的update方法更新数据
       const res = await client.update(deviceid, params)
       if (res.deviceid !== deviceid) return
       // 更新ui
-      setSwitches(newSwitches)
+      setSwitches(prev => {
+        return prev.map(sw =>
+          sw.outlet === outlet ? {...sw, switch: checked ? 'on' : 'off'} : sw
+        )
+      })
     } catch (error) {
       console.error(error)
       if ((error as IErrorMsgResponse).error === 504) {
         message.error('更新超时')
+        return
+      }
+      if ((error as IErrorMsgResponse).error === 400) {
+        console.error('params参数错误', params)
         return
       }
       message.error('设备控制失败')
@@ -85,11 +94,11 @@ const useDevice = (device: IThingItem) => {
       setOnline(status)
       if (status) {
         // 设备上线
-        message.info('设备已上线')
+        message.success('设备已上线')
       } else {
         // 设备下线
-        console.log('设备已下线')
-        setSwitches([])
+        message.info('设备已下线')
+        // setSwitches([])
       }
     }
 
@@ -102,14 +111,14 @@ const useDevice = (device: IThingItem) => {
     }
 
     client.on(`device_update:${deviceid}`, updateSwitch)
-    client.on(`device_online${deviceid}`, onlineAndOffline)
-    client.on(`device_offline${deviceid}`, onlineAndOffline)
-    client.on(`device_init${deviceid}`, deviceInit)
+    client.on(`device_online:${deviceid}`, onlineAndOffline)
+    client.on(`device_offline:${deviceid}`, onlineAndOffline)
+    client.on(`device_init:${deviceid}`, deviceInit)
     return () => {
       client.off(`device_update:${deviceid}`, updateSwitch)
-      client.off(`device_online${deviceid}`, onlineAndOffline)
-      client.off(`device_offline${deviceid}`, onlineAndOffline)
-      client.off(`device_init${deviceid}`, deviceInit)
+      client.off(`device_online:${deviceid}`, onlineAndOffline)
+      client.off(`device_offline:${deviceid}`, onlineAndOffline)
+      client.off(`device_init:${deviceid}`, deviceInit)
     }
   }, [deviceid])
 
