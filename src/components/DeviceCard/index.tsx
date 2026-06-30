@@ -9,7 +9,6 @@ interface IDeviceCardProps {
 
 const DeviceCard = ({device}: IDeviceCardProps) => {
   const {switches, toggle, switchLoadingMap, channelName} = useDevice(device)
-  console.log(channelName)
   return (
     <Card key={device.itemData.deviceid}>
       <div className={styles.deviceContainer}>
@@ -32,12 +31,7 @@ const DeviceCard = ({device}: IDeviceCardProps) => {
                 onChange={checked => toggle(checked, sw.outlet)}
               />
               {/* 开关名称 */}
-              <div
-                className={styles.switchName}
-                key={channelName[sw.outlet].value + channelName[sw.outlet].key}
-              >
-                {channelName[sw.outlet].value}
-              </div>
+              <div className={styles.switchName}>{channelName[sw.outlet]}</div>
             </div>
           ))}
         </div>

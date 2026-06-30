@@ -7,7 +7,6 @@ import {useState, useEffect, useMemo} from 'react'
 const useDevice = (device: IThingItem) => {
   const deviceid = device?.itemData.deviceid
   const [switches, setSwitches] = useState(device.itemData.params.switches)
-  console.log(switches)
   const [switchLoadingMap, setSwitchLoadingMap] = useState<
     Map<number, boolean>
   >(new Map())
@@ -53,14 +52,13 @@ const useDevice = (device: IThingItem) => {
 
   // 处理开关名称
   const channelName = useMemo(() => {
-    return Object.entries(device.itemData.tags.ck_channel_name).map(
-      ([key, value]) => {
-        return {
-          key,
-          value
-        }
-      }
-    )
+    const defaultChannelName = {
+      0: '通道1',
+      1: '通道2',
+      2: '通道3',
+      3: '通道4'
+    }
+    return device.itemData.tags?.ck_channel_name ?? defaultChannelName
   }, [device])
 
   useEffect(() => {
