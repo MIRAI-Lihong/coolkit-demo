@@ -1,7 +1,8 @@
 import type {IUserResponse} from './user'
 
 export interface ILoginAPI {
-  phoneNumber: string
+  phoneNumber?: string
+  email?: string
   password: string
   countryCode: string
 }
