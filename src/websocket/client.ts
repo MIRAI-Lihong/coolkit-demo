@@ -13,7 +13,8 @@ import {
   type IOnlineMsgResponse,
   type IPendingHandler,
   type IUpdateMsgRequest,
-  type IUpdateMsgResponse
+  type IWebUpdateMsgResponse,
+  type ListenResponse
 } from '@/types/wss'
 import type {IDeviceParams} from '@/types/device'
 import {accessTokenStorage, apiKeyStorage} from '@/utils/storage'
@@ -25,7 +26,7 @@ import {
   isParamErrorMsg,
   isShakeMsg,
   isTimeOutMsg,
-  isUpdateMsg
+  isWebUpdateMsg
 } from '@/utils/typeGuard'
 
 function getAuth() {
@@ -42,7 +43,7 @@ class Client {
   // 任务队列
   private pendingMap = new Map<string, IPendingHandler>()
   // 监听器
-  private listener = new Map<string, Set<ActionMessageHandler>>()
+  private listener = new Map<string, Set<ActionMessageHandler<any>>>()
   // 重连次数
   private reconnectAttempts = 0
   // 最大重连数
@@ -84,7 +85,7 @@ class Client {
           if (e.data === 'pong') return
 
           const data: IMsgResponse = JSON.parse(e.data)
-          // 调用处理消息
+          // 处理其他响应的消息
           this.messageHandler(data)
         }
 
@@ -110,11 +111,11 @@ class Client {
   // 握手
   private handshake(at: string, apikey: string, appid: string) {
     const data = {
-      action: 'userOnline',
+      action: MessageAction.USERONLINE,
       version: 8,
       ts: Math.floor(Date.now() / 1000), // s
       at,
-      userAgent: 'app',
+      userAgent: UserAgent.APP,
       apikey,
       appid,
       nonce: getNonce(),
@@ -139,8 +140,8 @@ class Client {
     }
 
     if (isDeviceMsg(data) || isAppMsg(data)) {
-      // 设备更新处理
-      this.actionHandler(data)
+      // 设备和app更新处理
+      this.deviceAndAppActionHandler(data)
       return
     }
 
@@ -150,9 +151,9 @@ class Client {
       return
     }
 
-    if (isUpdateMsg(data)) {
-      // 网页主动更新处理
-      this.updateHandler(data)
+    if (isWebUpdateMsg(data)) {
+      // Web端主动更新处理
+      this.webUpdateHandler(data)
       return
     }
 
@@ -243,7 +244,7 @@ class Client {
 
   // 将消息的返回结果封装成一个Promise
   private request(data: IUpdateMsgRequest) {
-    return new Promise<IUpdateMsgResponse>((resolve, reject) => {
+    return new Promise<IWebUpdateMsgResponse>((resolve, reject) => {
       // 时间戳，通过时间戳来表示同一次操作
       const sequence = Date.now().toString()
 
@@ -259,7 +260,9 @@ class Client {
   }
 
   // 设备更新处理
-  private actionHandler(data: IAppMsgResponse | IDeviceMsgResponse) {
+  private deviceAndAppActionHandler(
+    data: IAppMsgResponse | IDeviceMsgResponse
+  ) {
     const deviceid = data.deviceid
     // 设备 update 消息回调 将数据传给回调函数
     this.emit(`device_update:${deviceid}`, data)
@@ -283,8 +286,8 @@ class Client {
     this.emit(`device_init:${deviceid}`, data)
   }
 
-  // 网页主动更新处理
-  private updateHandler(data: IUpdateMsgResponse) {
+  // Web端主动更新处理
+  private webUpdateHandler(data: IWebUpdateMsgResponse) {
     // 当ws服务器下发查询数据后，找到之前存取的任务
     const task = this.pendingMap.get(data.sequence)
     if (!task) return
@@ -295,16 +298,7 @@ class Client {
   }
 
   // 监听任务 存储回调
-  on(
-    event: string,
-    callback: (
-      data:
-        | IAppMsgResponse
-        | IDeviceMsgResponse
-        | IOnlineMsgResponse
-        | IDeviceInitMsgResponse
-    ) => void
-  ) {
+  on<T extends ListenResponse>(event: string, callback: (data: T) => void) {
     if (!this.listener.get(event)) {
       // 第一次存 设置空Set
       this.listener.set(event, new Set())
@@ -313,28 +307,12 @@ class Client {
   }
 
   // 关闭监听 删除回调
-  off(
-    event: string,
-    callback: (
-      data:
-        | IAppMsgResponse
-        | IDeviceMsgResponse
-        | IOnlineMsgResponse
-        | IDeviceInitMsgResponse
-    ) => void
-  ) {
+  off<T extends ListenResponse>(event: string, callback: (data: T) => void) {
     this.listener.get(event)?.delete(callback)
   }
 
   // 发布
-  private emit(
-    event: string,
-    data:
-      | IAppMsgResponse
-      | IDeviceMsgResponse
-      | IOnlineMsgResponse
-      | IDeviceInitMsgResponse
-  ) {
+  private emit(event: string, data: ListenResponse) {
     // 取出回调进行消费
     this.listener.get(event)?.forEach(cb => cb(data))
   }

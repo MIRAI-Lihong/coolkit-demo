@@ -4,7 +4,7 @@ import {
   UserAgent,
   type IAppMsgResponse,
   type IShakeMsgResponse,
-  type IUpdateMsgResponse,
+  type IWebUpdateMsgResponse,
   type IOnlineMsgResponse,
   MessageAction,
   type IDeviceInitMsgResponse,
@@ -37,7 +37,9 @@ export function isShakeMsg(msg: IMsgResponse): msg is IShakeMsgResponse {
 }
 
 // 判断是否为网页主动更新消息
-export function isUpdateMsg(msg: IMsgResponse): msg is IUpdateMsgResponse {
+export function isWebUpdateMsg(
+  msg: IMsgResponse
+): msg is IWebUpdateMsgResponse {
   return 'error' in msg && msg.error === 0
 }
 

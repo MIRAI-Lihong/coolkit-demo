@@ -30,7 +30,7 @@ const useDevice = (device: IThingItem) => {
   // 开关切换处理
   const toggle = async (checked: boolean, outlet: number) => {
     if (!online) return
-    // 计算新的开关数据
+    // 计算新的开关数据 增量
     const params = {
       switches: [
         {
@@ -106,7 +106,7 @@ const useDevice = (device: IThingItem) => {
     function deviceInit(data: IDeviceInitMsgResponse) {
       const d_seq = data.d_seq
       if (d_seq) {
-        message.success('正在同步信息')
+        message.success('设备联网成功,正在加载数据')
       }
     }
 
