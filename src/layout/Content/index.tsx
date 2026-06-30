@@ -16,9 +16,15 @@ interface IContentProps {
   onPageChange: (page: number, size: number) => void
 }
 
-const Content = ({deviceList, room, total, currentPage, pageSize, onPageChange}: IContentProps) => {
-  const {query, searchList, onSearch, resetFilter} =
-    useFilter(deviceList)
+const Content = ({
+  deviceList,
+  room,
+  total,
+  currentPage,
+  pageSize,
+  onPageChange
+}: IContentProps) => {
+  const {query, searchList, onSearch, resetFilter} = useFilter(deviceList)
 
   useEffect(() => {
     // 切换房间触发重置
@@ -46,6 +52,7 @@ const Content = ({deviceList, room, total, currentPage, pageSize, onPageChange}:
             style={{width: 200}}
           />
           <Pagination
+            simple={{readOnly: true}}
             current={currentPage}
             pageSize={pageSize}
             total={hasQuery ? shownList.length : total}
