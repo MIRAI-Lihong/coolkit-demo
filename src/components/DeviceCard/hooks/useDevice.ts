@@ -54,7 +54,7 @@ const useDevice = (device: IThingItem) => {
     } catch (error) {
       console.error(error)
       if ((error as IErrorMsgResponse).error === 504) {
-        message.error('更新超时')
+        message.error('请求超时，请重试')
         return
       }
       if ((error as IErrorMsgResponse).error === 400) {
@@ -98,7 +98,14 @@ const useDevice = (device: IThingItem) => {
       } else {
         // 设备下线
         message.info('设备已下线')
-        // setSwitches([])
+        setSwitches(prev => {
+          return prev.map(sw => {
+            return {
+              ...sw,
+              switch: 'off'
+            }
+          })
+        })
       }
     }
 
