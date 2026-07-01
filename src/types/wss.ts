@@ -9,8 +9,8 @@ export interface IDispatchResponse {
 
 // 心脏配置返回结构
 interface IMessageConfigResponse {
-  hb: number
-  hbInterval: number
+  hb: number // 心跳开关
+  hbInterval: number // 心跳间隔
 }
 
 export type IMsgResponse =
@@ -107,6 +107,19 @@ export interface IUpdateMsgRequest {
   sequence?: string
 }
 
+// 握手发送结构
+export interface IHandShakeRequest {
+  action: MessageAction.USERONLINE
+  version: 8
+  ts: number
+  at: string
+  userAgent: UserAgent.APP
+  apikey: string
+  appid: string
+  nonce: string
+  sequence?: string
+}
+
 export type ListenResponse =
   | IAppMsgResponse
   | IDeviceMsgResponse
@@ -116,7 +129,7 @@ export type ListenResponse =
 export type ActionMessageHandler<T> = (data: T) => void
 
 export interface IPendingHandler {
-  resolve: (value: IWebUpdateMsgResponse) => void
+  resolve: (value: IWebUpdateMsgResponse | boolean) => void
   reject: (value: IErrorMsgResponse) => void
 }
 

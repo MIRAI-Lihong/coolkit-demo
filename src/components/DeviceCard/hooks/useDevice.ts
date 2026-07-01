@@ -104,8 +104,11 @@ const useDevice = (device: IThingItem) => {
 
     // 设备更新回调
     function deviceInit(data: IDeviceInitMsgResponse) {
-      const d_seq = data.d_seq
-      if (d_seq) {
+      const {
+        d_seq,
+        params: {sledOnline}
+      } = data
+      if (d_seq && sledOnline === 'on') {
         message.success('设备联网成功,正在加载数据')
       }
     }

@@ -9,9 +9,11 @@ import {
   type IDeviceInitMsgResponse,
   type IDeviceMsgResponse,
   type IErrorMsgResponse,
+  type IHandShakeRequest,
   type IMsgResponse,
   type IOnlineMsgResponse,
   type IPendingHandler,
+  type IShakeMsgResponse,
   type IUpdateMsgRequest,
   type IWebUpdateMsgResponse,
   type ListenResponse
@@ -121,11 +123,9 @@ class Client {
       userAgent: UserAgent.APP,
       apikey,
       appid,
-      nonce: getNonce(),
-      sequence: Date.now().toString() // ms
+      nonce: getNonce()
     }
-    // 发送握手信息
-    this.send(data)
+    return this.request(data as IHandShakeRequest)
   }
 
   // 消息处理
@@ -150,7 +150,7 @@ class Client {
 
     if (isShakeMsg(data)) {
       // 握手处理
-      this.startHeartbeat(data.config.hbInterval)
+      this.startHeartbeat(data)
       return
     }
 
@@ -222,14 +222,26 @@ class Client {
   }
 
   // 开启心跳
-  private startHeartbeat(hbInterval: number) {
-    this.stopHeartbeat()
+  private startHeartbeat(data: IShakeMsgResponse) {
+    const {
+      config: {hb, hbInterval},
+      sequence
+    } = data
+    if (hb === 0) {
+      this.stopHeartbeat()
+      return
+    }
+    const task = this.pendingMap.get(sequence)
+    if (!task) return
     // 计算心跳间隔
     const newHbInterval = hbInterval * (0.8 + Math.random() * 0.2) * 1000
     // 开启心跳定时
     this.heartbeatTimer = setInterval(() => {
       this?.ws?.send('ping')
     }, newHbInterval)
+    task.resolve(true)
+    // 当前任务执行完成，直接删除
+    this.pendingMap.delete(data.sequence)
   }
 
   // 停止心跳
@@ -246,14 +258,23 @@ class Client {
   }
 
   // 将消息的返回结果封装成一个Promise
-  private request(data: IUpdateMsgRequest) {
+  private request(data: IUpdateMsgRequest | IHandShakeRequest) {
     return new Promise<IWebUpdateMsgResponse>((resolve, reject) => {
       // 时间戳，通过时间戳来表示同一次操作
       const sequence = Date.now().toString()
 
+      // 如果服务端没有报超时，需要在此处报一个超时
+      const timeout = setTimeout(() => {
+        this.pendingMap.delete(sequence)
+        reject(new Error('ws timeout'))
+      }, 10000)
+
       // 记录当前任务记录
       this.pendingMap.set(sequence, {
-        resolve,
+        resolve: res => {
+          clearTimeout(timeout)
+          resolve(res as IWebUpdateMsgResponse)
+        },
         reject
       })
 
