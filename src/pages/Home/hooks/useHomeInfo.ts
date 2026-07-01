@@ -39,6 +39,7 @@ export function useHomeInfo() {
           if (data.thingInfo) {
             setThingInfo(data.thingInfo)
             const list = data.thingInfo.thingList
+            // 通过上一页的最后一个设备的index 计算出下一页的beginIndex
             if (list && list.length > 0) {
               const nextBeginIndex = list[list.length - 1].index + 1
               beginIndexMapRef.current[currentPage + 1] = nextBeginIndex
@@ -59,13 +60,17 @@ export function useHomeInfo() {
     }
   }, [currentPage, pageSize])
 
+  // 分页变化
   const onPageChange = useCallback(
     (page: number, size: number) => {
+      // 当分页大小改变时也会触发 onchange
       if (size !== pageSize) {
+        // 重新从第一页开始获取
         beginIndexMapRef.current = {1: -9999999}
         setPageSize(size)
         setCurrentPage(1)
       } else {
+        // 常规点击上下页
         setCurrentPage(page)
       }
     },
