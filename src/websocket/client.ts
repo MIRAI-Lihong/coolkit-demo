@@ -224,9 +224,11 @@ class Client {
   // 开启心跳
   private startHeartbeat(data: IShakeMsgResponse) {
     const {
+      error,
       config: {hb, hbInterval},
       sequence
     } = data
+    if (error !== 0) return
     if (hb === 0) {
       this.stopHeartbeat()
       return
